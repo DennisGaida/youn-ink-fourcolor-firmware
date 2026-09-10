@@ -792,6 +792,13 @@ void WifiStation::Start() {
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_start());
 
+    // Modem sleep (the ESP-IDF station default) buffers/drops incoming
+    // packets between DTIM beacons, which shows up as slow TCP handshakes
+    // and a high HTTP failure rate. Boot with full radio power and let
+    // SetPowerSaveLevel() dial it back down if the user opts into LOW_POWER
+    // or BALANCED from Settings.
+    ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
+
     if (max_tx_power_ != 0) {
         ESP_ERROR_CHECK(esp_wifi_set_max_tx_power(max_tx_power_));
     }
@@ -836,7 +843,7 @@ void WifiStation::HandleScanResult() {
         });
         if (it != ssid_list.end()) {
             ESP_LOGI(TAG, "Found AP: %s, BSSID: %02x:%02x:%02x:%02x:%02x:%02x, RSSI: %d, Channel: %d, Authmode: %d",
-                (char *)ap_record.ssid, 
+                (char *)ap_record.ssid,
                 ap_record.bssid[0], ap_record.bssid[1], ap_record.bssid[2],
                 ap_record.bssid[3], ap_record.bssid[4], ap_record.bssid[5],
                 ap_record.rssi, ap_record.primary, ap_record.authmode);
