@@ -2,10 +2,10 @@ name: Build Firmware
 
 on:
   push:
-    branches: [main]
+    branches: [2bp, dev]
     tags: ['v*']
   pull_request:
-    branches: [main]
+    branches: [2bp, dev]
   workflow_dispatch:
 
 permissions:
