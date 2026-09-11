@@ -369,6 +369,10 @@ private:
             }
         });
 
+        up_button_.OnDoubleClick([]() {
+            Application::GetInstance().OnUpDoubleClick();
+        });
+
         up_button_.OnPressUp([]() {
             const int64_t started_at = s_up_press_down_ms.exchange(-1);
             const bool was_long_press = started_at >= 0 && (NowMs() - started_at) >= kNavLongPressMs;

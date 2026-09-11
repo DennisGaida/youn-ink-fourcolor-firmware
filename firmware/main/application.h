@@ -43,6 +43,7 @@ public:
     void OnDownClick();
     void OnUpLongPress();
     void OnDownLongPress();
+    void OnUpDoubleClick();
     void OnWifiConfigComboLongPress();
     void OnBootClick();
     void OnBootLongPress();
