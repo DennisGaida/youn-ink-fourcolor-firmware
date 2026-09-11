@@ -4,10 +4,10 @@
  *
  * Fetches State Council holiday data from timor.tech API.
  * Response format:
- *   {"code":0, "holiday":{"2026-01-01":{"name":"元旦","rest":1},...}}
+ *   {"code":0, "holiday":{"2026-01-01":{"name":"元旦" (New Year's Day),"rest":1},...}}
  *
- * - rest=1: holiday/rest day (休)
- * - rest=0: compensatory workday (补班)
+ * - rest=1: holiday/rest day
+ * - rest=0: compensatory workday
  *
  * Data is cached in NVS under key "holiday_YYYY" (blob, ~2KB per year).
  */

@@ -9,7 +9,7 @@
 #include "yearprogress_renderer.h"
 #include "rawdraw/rawdraw.h"
 #include "rawdraw/style.h"
-#include "rawdraw/layout_utils.h"  // FIX: 使用 InkCenteredTextTopYInBox 替代 line_height 居中
+#include "rawdraw/layout_utils.h"  // FIX: use InkCenteredTextTopYInBox instead of line_height centering
 #include "rawdraw/theme.h"
 #include "i18n.h"
 #include <algorithm>
@@ -140,7 +140,7 @@ void YearProgressRenderer::Render(uint8_t* fb, int width, int height) {
     const int content_bottom = height - Style::kSpacingSM;
     int y = content_top;
 
-    // === Section 1: Title "年度进度" — independent Y, >=20px gap below ===
+    // === Section 1: Title "Year Progress" — independent Y, >=20px gap below ===
     const char* title = i18n::Tr("年度进度", "Year Progress");
     int title_w = MeasureTextWidth(title, title_font_);
     int title_x = (width - title_w) / 2;
@@ -177,7 +177,7 @@ void YearProgressRenderer::Render(uint8_t* fb, int width, int height) {
                        progress_style, Style::kBorderRadiusPill);
     y += bar_h + 20;  // 20px gap after progress bar
 
-    // === Section 5: "第X天/共Y天" — independent Y, >=20px gap below ===
+    // === Section 5: "Day X / total Y" — independent Y, >=20px gap below ===
     char day_str[64];
     snprintf(day_str, sizeof(day_str), i18n::Tr("第%d天 / 共%d天", "Day %d / %d"), day_of_year_, total_days_);
     int day_str_w = MeasureTextWidth(day_str, small_font_);
@@ -267,8 +267,9 @@ void YearProgressRenderer::RenderMonthRow(uint8_t* fb, int width, int y, int mon
     const Color success = theme.ColorFor(ThemeToken::SuccessLike);
     const Color accent = theme.ColorFor(ThemeToken::Accent);
     const int row_h = 22;
-    // FIX: 改用 InkCenteredTextTopYInBox，避免 line_height 居中导致中文偏上
-    // 参见 wiki/projects/notellm-baseline-alignment.md
+    // FIX: switched to InkCenteredTextTopYInBox to avoid line_height centering
+    // pushing Chinese text too high
+    // See wiki/projects/notellm-baseline-alignment.md
     const char* month_name = GetMonthName(month);
     const int text_y = InkCenteredTextTopYInBox(small_font_, month_name, y, row_h, 0);
 

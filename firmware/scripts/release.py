@@ -86,7 +86,7 @@ def _collect_variants(config_filename: str = "config.json") -> list[dict[str, st
             for build in cfg.get("builds", []):
                 variants.append({"board": board_path.name, "name": build["name"]})
         except Exception as e:
-            print(f"[ERROR] 解析 {cfg_path} 失败: {e}", file=sys.stderr)
+            print(f"[ERROR] Failed to parse {cfg_path}: {e}", file=sys.stderr)
     return variants
 
 
@@ -178,7 +178,7 @@ def release(board_type: str, config_filename: str = "config.json", *, filter_nam
     """
     cfg_path = _BOARDS_DIR / board_type / config_filename
     if not cfg_path.exists():
-        print(f"[WARN] {cfg_path} 不存在，跳过 {board_type}")
+        print(f"[WARN] {cfg_path} does not exist, skipping {board_type}")
         return
 
     project_version = get_project_version()
@@ -192,17 +192,17 @@ def release(board_type: str, config_filename: str = "config.json", *, filter_nam
     if filter_name:
         builds = [b for b in builds if b["name"] == filter_name]
         if not builds:
-            print(f"[ERROR] 未在 {board_type} 的 {config_filename} 中找到变体 {filter_name}", file=sys.stderr)
+            print(f"[ERROR] Variant {filter_name} not found in {config_filename} for {board_type}", file=sys.stderr)
             sys.exit(1)
 
     for build in builds:
         name = build["name"]
         if not name.startswith(board_type):
-            raise ValueError(f"build.name {name} 必须以 {board_type} 开头")
+            raise ValueError(f"build.name {name} must start with {board_type}")
 
         output_path = Path("releases") / f"v{project_version}_{name}.zip"
         if output_path.exists():
-            print(f"跳过 {name} 因为 {output_path} 已存在")
+            print(f"Skipping {name} because {output_path} already exists")
             continue
 
         # Process sdkconfig_append
@@ -247,11 +247,11 @@ def release(board_type: str, config_filename: str = "config.json", *, filter_nam
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("board", nargs="?", default=None, help="板子类型或 all")
-    parser.add_argument("-c", "--config", default="config.json", help="指定 config 文件名，默认 config.json")
-    parser.add_argument("--list-boards", action="store_true", help="列出所有支持的 board 及变体列表")
-    parser.add_argument("--json", action="store_true", help="配合 --list-boards，JSON 格式输出")
-    parser.add_argument("--name", help="指定变体名称，仅编译匹配的变体")
+    parser.add_argument("board", nargs="?", default=None, help="Board type, or 'all'")
+    parser.add_argument("-c", "--config", default="config.json", help="Specify the config file name, default config.json")
+    parser.add_argument("--list-boards", action="store_true", help="List all supported boards and their variants")
+    parser.add_argument("--json", action="store_true", help="Used with --list-boards, output in JSON format")
+    parser.add_argument("--name", help="Specify the variant name; only compile the matching variant")
 
     args = parser.parse_args()
 
@@ -270,7 +270,7 @@ if __name__ == "__main__":
         merge_bin()
         curr_board_type = get_board_type_from_compile_commands()
         if curr_board_type is None:
-            print("未能从 compile_commands.json 解析 board_type", file=sys.stderr)
+            print("Failed to parse board_type from compile_commands.json", file=sys.stderr)
             sys.exit(1)
         project_ver = get_project_version()
         zip_bin(curr_board_type, project_ver)
@@ -282,7 +282,7 @@ if __name__ == "__main__":
 
     # Check board_type in CMakeLists
     if board_type_input != "all" and not _board_type_exists(board_type_input):
-        print(f"[ERROR] main/CMakeLists.txt 中未找到 board_type {board_type_input}", file=sys.stderr)
+        print(f"[ERROR] board_type {board_type_input} not found in main/CMakeLists.txt", file=sys.stderr)
         sys.exit(1)
 
     variants_all = _collect_variants(config_filename=args.config)
@@ -296,10 +296,10 @@ if __name__ == "__main__":
 
     for bt in sorted(target_board_types):
         if not _board_type_exists(bt):
-            print(f"[ERROR] main/CMakeLists.txt 中未找到 board_type {bt}", file=sys.stderr)
+            print(f"[ERROR] board_type {bt} not found in main/CMakeLists.txt", file=sys.stderr)
             sys.exit(1)
         cfg_path = _BOARDS_DIR / bt / args.config
         if bt == board_type_input and not cfg_path.exists():
-            print(f"开发板 {bt} 未定义 {args.config} 配置文件，跳过")
+            print(f"Board {bt} does not define a {args.config} config file, skipping")
             sys.exit(0)
         release(bt, config_filename=args.config, filter_name=name_filter if bt == board_type_input else None)

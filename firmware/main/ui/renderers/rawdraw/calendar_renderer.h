@@ -4,13 +4,13 @@
  *
  * Displays a 7x6 calendar grid with:
  * - Title bar with year/month and 2px divider
- * - Weekday header row (日 一 二 三 四 五 六)
+ * - Weekday header row (Sun Mon Tue Wed Thu Fri Sat)
  * - Date cells with today highlighted as black pill
  * - Bottom date info line
  * - Selection cursor for picking specific dates
  *
- * Navigation: UP/DOWN=翻月, BOOT=选中日期/进入选择模式
- * In selection mode: UP/DOWN=移动光标, BOOT=确认选择
+ * Navigation: UP/DOWN=change month, BOOT=select date/enter selection mode
+ * In selection mode: UP/DOWN=move cursor, BOOT=confirm selection
  */
 
 #ifndef RAWDRAW_CALENDAR_RENDERER_H
@@ -47,7 +47,7 @@ public:
 
     /**
      * @brief Get formatted voice query context string.
-     * Returns formatted date like "2026年4月15日 丙午年二月初一" if a date
+     * Returns formatted date like "2026-4-15 Bingwu year, 2nd month, 1st day" if a date
      * has been selected, or empty string otherwise.
      * The parent should call this when voice collection starts to include
      * the calendar date context in the LLM prompt.

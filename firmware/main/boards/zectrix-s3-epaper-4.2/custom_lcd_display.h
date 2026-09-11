@@ -127,7 +127,7 @@ private:
     void EPD_SetCursor(uint16_t Xstart, uint16_t Ystart);
     void EPD_TurnOnDisplay();
     void EPD_TurnOnDisplayPart();
-    void EPD_SetFullWindowAndCounter(); // ***关键：恢复全屏窗口+计数器***
+    void EPD_SetFullWindowAndCounter(); // ***key: restore full window + counter***
     bool IsFourColorPanel() const { return panel_type_ == EPD_PANEL_4COLOR_SSD2683; }
     void EPD_DisplayFourColorTestPattern();
 
@@ -156,9 +156,9 @@ private:
     bool urgent_refresh = false;
     bool force_full_refresh_ = false;
     TickType_t last_sample_tick = 0;
-    int sample_interval_ms = 300; // 节流：采样间隔（可调 200~800）
+    int sample_interval_ms = 300; // throttle: sampling interval (adjustable 200~800)
 
-    bool prev_buffer_synced = false;  // 标志：prev_buffer 是否已与屏幕同步
+    bool prev_buffer_synced = false;  // flag: whether prev_buffer is synced with the screen
     bool refresh_in_progress = false;
     bool refresh_busy_seen_ = false;
     uint32_t next_kick_ms_ = 0;
@@ -167,7 +167,7 @@ private:
     void UpdateDisplayBusyLocked();
     bool CheckRefreshIdleLocked();
 
-    // 文本渲染辅助
+    // Text rendering helper
     void render_text_to_buffer(const char* text, int x, int y, const lv_font_t* font);
 
     // Rawdraw-backed drawing helpers (P0: direct framebuffer operations)

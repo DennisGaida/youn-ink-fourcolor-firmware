@@ -48,23 +48,23 @@ static esp_timer_handle_t s_timer = nullptr;
 WeatherIcon ParseWeatherIcon(const char* text) {
     if (!text || !text[0]) return WeatherIcon::Unknown;
 
-    // Sunny variants
+    // Sunny variants (晴 = sunny)
     if (strstr(text, "晴") != nullptr) return WeatherIcon::Sunny;
 
-    // Cloudy
+    // Cloudy (多云 = cloudy, 晴间多云 = partly cloudy)
     if (strstr(text, "多云") != nullptr) return WeatherIcon::Cloudy;
     if (strstr(text, "晴间多云") != nullptr) return WeatherIcon::Cloudy;
 
-    // Overcast
+    // Overcast (阴 = overcast)
     if (strstr(text, "阴") != nullptr) return WeatherIcon::Overcast;
 
-    // Rain (all types)
+    // Rain (all types) (雨 = rain)
     if (strstr(text, "雨") != nullptr) return WeatherIcon::Rain;
 
-    // Snow
+    // Snow (雪 = snow)
     if (strstr(text, "雪") != nullptr) return WeatherIcon::Snow;
 
-    // Fog/Haze
+    // Fog/Haze (雾 = fog, 霾 = haze, 沙尘 = sandstorm/dust)
     if (strstr(text, "雾") != nullptr) return WeatherIcon::Fog;
     if (strstr(text, "霾") != nullptr) return WeatherIcon::Fog;
     if (strstr(text, "沙尘") != nullptr) return WeatherIcon::Fog;

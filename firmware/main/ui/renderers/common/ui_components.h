@@ -7,17 +7,17 @@
 namespace ui {
 
 // ============================================================
-// 通用 UI 组件库 (Spec §2)
-// 所有页面共用，确保视觉一致性
+// Common UI component library (Spec §2)
+// Shared by all pages to ensure visual consistency
 // ============================================================
 
-// 字体声明（extern C 防止 C++ name mangling）
+// Font declarations (extern C to prevent C++ name mangling)
 extern "C" {
     extern const lv_font_t font_zectrix_16_1;
     extern const lv_font_t SourceHanSansSC_Regular_slim;
 }
 
-// 颜色常量
+// Color constants
 namespace Colors {
     inline lv_color_t White() { return lv_color_white(); }
     inline lv_color_t Black() { return lv_color_black(); }
@@ -27,30 +27,30 @@ namespace Colors {
 }
 
 // ============================================================
-// Panel: 带边框、圆角、标题栏的区域容器
+// Panel: an area container with border, rounded corners, and a title bar
 // ============================================================
 class Panel {
 public:
     Panel();
     ~Panel();
 
-    // 创建面板
+    // Create the panel
     void Create(lv_obj_t* parent, int x, int y, int w, int h);
     void Create(lv_obj_t* parent, lv_coord_t x_pct, lv_coord_t y_pct,
                 lv_coord_t w_pct, lv_coord_t h_pct);
 
-    // 设置标题
+    // Set the title
     void SetTitle(const char* title);
 
-    // 获取容器对象（用于放置子控件）
+    // Get the container object (for placing child controls)
     lv_obj_t* content() const { return content_; }
     lv_obj_t* root() const { return panel_; }
 
-    // 显示/隐藏
+    // Show/hide
     void Show();
     void Hide();
 
-    // 设置样式
+    // Set style
     void SetBorder(bool enabled, lv_color_t color = lv_color_black(), lv_coord_t width = 1);
     void SetBackground(lv_color_t color, lv_opa_t opa = LV_OPA_COVER);
     void SetRadius(lv_coord_t radius);
@@ -62,27 +62,27 @@ private:
 };
 
 // ============================================================
-// ScrollView: 可滚动内容区域，带滚动条指示器
+// ScrollView: a scrollable content area with a scrollbar indicator
 // ============================================================
 class ScrollView {
 public:
     ScrollView();
     ~ScrollView();
 
-    // 创建滚动容器
+    // Create the scroll container
     void Create(lv_obj_t* parent, int x, int y, int w, int h);
 
-    // 获取内容对象
+    // Get the content object
     lv_obj_t* content() const { return scroll_; }
     lv_obj_t* root() const { return scroll_; }
 
-    // 滚动到底部
+    // Scroll to the bottom
     void ScrollToEnd(bool anim = false);
 
-    // 显示/隐藏滚动条
+    // Show/hide the scrollbar
     void ShowScrollbar(bool show);
 
-    // 显示/隐藏
+    // Show/hide
     void Show();
     void Hide();
 
@@ -91,28 +91,28 @@ private:
 };
 
 // ============================================================
-// IconButton: 带 icon font 的按钮
+// IconButton: a button with an icon font
 // ============================================================
 class IconButton {
 public:
     IconButton();
     ~IconButton();
 
-    // 创建图标按钮
+    // Create the icon button
     void Create(lv_obj_t* parent, const char* icon_text, int w = 40, int h = 40);
 
-    // 设置点击回调
+    // Set the click callback
     void SetClickCallback(void (*callback)(void*), void* user_data);
 
-    // 设置样式
+    // Set style
     void SetIconColor(lv_color_t color);
     void SetBgColor(lv_color_t color, lv_opa_t opa = LV_OPA_COVER);
     void SetBorder(bool enabled, lv_color_t color = lv_color_black(), lv_coord_t width = 1);
 
-    // 获取对象
+    // Get the object
     lv_obj_t* root() const { return btn_; }
 
-    // 显示/隐藏
+    // Show/hide
     void Show();
     void Hide();
 
@@ -122,40 +122,40 @@ private:
 };
 
 // ============================================================
-// Bubble: 对话气泡（左/右对齐，圆角，支持流式追加文字）
+// Bubble: a chat bubble (left/right aligned, rounded corners, supports streaming text append)
 // ============================================================
 class Bubble {
 public:
     enum class Align {
-        Left,   // AI 回复（左侧，白底黑框）
-        Right,  // 用户消息（右侧，黑底白字）
-        Center  // 系统提示（居中，透明背景）
+        Left,   // AI reply (left side, white background, black border)
+        Right,  // User message (right side, black background, white text)
+        Center  // System hint (centered, transparent background)
     };
 
     Bubble();
     ~Bubble();
 
-    // 创建气泡
+    // Create the bubble
     void Create(lv_obj_t* parent, Align align = Align::Left);
 
-    // 设置文本
+    // Set the text
     void SetText(const char* text);
 
-    // 流式追加文本（Spec §3 关键功能）
+    // Append streaming text (Spec §3 key feature)
     void AppendText(const char* chunk);
 
-    // 获取当前文本
+    // Get the current text
     std::string GetText() const;
 
-    // 获取对象
+    // Get the object
     lv_obj_t* root() const { return bubble_; }
     lv_obj_t* label() const { return label_; }
 
-    // 显示/隐藏
+    // Show/hide
     void Show();
     void Hide();
 
-    // 滚动到可视区域
+    // Scroll into view
     void ScrollToView(bool anim = false);
 
 private:
@@ -168,27 +168,27 @@ private:
 };
 
 // ============================================================
-// ProgressBar: 进度条
+// ProgressBar: a progress bar
 // ============================================================
 class ProgressBar {
 public:
     ProgressBar();
     ~ProgressBar();
 
-    // 创建进度条
+    // Create the progress bar
     void Create(lv_obj_t* parent, int x, int y, int w, int h = 8);
 
-    // 设置进度 (0-100)
+    // Set the progress (0-100)
     void SetValue(int value);
 
-    // 获取对象
+    // Get the object
     lv_obj_t* root() const { return bar_; }
 
-    // 显示/隐藏
+    // Show/hide
     void Show();
     void Hide();
 
-    // 设置样式
+    // Set style
     void SetBgColor(lv_color_t color);
     void SetIndicColor(lv_color_t color);
 
@@ -197,20 +197,20 @@ private:
 };
 
 // ============================================================
-// 工具函数
+// Utility functions
 // ============================================================
 
-// 安全设置 label 长模式（自动换行）
+// Safely set the label's long mode (auto wrap)
 inline void SetLabelWrap(lv_obj_t* label) {
     lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
 }
 
-// 获取字体高度
+// Get the font height
 inline int GetFontHeight(const lv_font_t* font) {
     return font ? font->line_height : 16;
 }
 
-// 测量文本宽度
+// Measure the text width
 inline int GetTextWidth(const char* text, const lv_font_t* font) {
     if (!text || !font) return 0;
     lv_point_t size = {0, 0};

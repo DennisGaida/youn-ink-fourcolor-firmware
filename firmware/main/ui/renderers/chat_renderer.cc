@@ -30,7 +30,7 @@ void ChatRenderer::Update() {
 }
 
 bool ChatRenderer::HandleInput(const ButtonEvent& event) {
-    // Chat page 不直接处理按钮事件，由 LanMicApp orchestrator 处理
+    // Chat page does not handle button events directly; the LanMicApp orchestrator does
     (void)event;
     return false;
 }

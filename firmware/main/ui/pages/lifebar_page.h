@@ -6,23 +6,23 @@
 
 namespace ui {
 
-// 人生进度数据
+// Life progress data
 struct LifeBarData {
-    std::string age;         // 年龄
-    std::string goal;        // 目标
-    std::string progress;    // 进度百分比
+    std::string age;         // Age
+    std::string goal;        // Goal
+    std::string progress;    // Progress percentage
 };
 
-// 人生进度页 - 简化布局
+// Life progress page - simplified layout
 class LifeBarPage {
 public:
     LifeBarPage(lv_obj_t* parent);
     ~LifeBarPage();
 
-    // 更新数据
+    // Update data
     void UpdateData(const LifeBarData& data);
 
-    // 刷新显示
+    // Refresh display
     void Refresh();
 
 private:

@@ -7,7 +7,7 @@ namespace ui {
 static constexpr char kTag[] = "UiComponents";
 
 // ============================================================
-// Panel 实现
+// Panel implementation
 // ============================================================
 
 Panel::Panel() = default;
@@ -19,7 +19,7 @@ void Panel::Create(lv_obj_t* parent, int x, int y, int w, int h) {
         return;
     }
 
-    // 主面板
+    // Main panel
     panel_ = lv_obj_create(parent);
     lv_obj_set_pos(panel_, x, y);
     lv_obj_set_size(panel_, w, h);
@@ -30,7 +30,7 @@ void Panel::Create(lv_obj_t* parent, int x, int y, int w, int h) {
     lv_obj_set_style_border_width(panel_, 1, 0);
     lv_obj_set_style_pad_all(panel_, 0, 0);
 
-    // 标题栏
+    // Title bar
     title_bar_ = lv_obj_create(panel_);
     lv_obj_set_size(title_bar_, LV_PCT(100), 24);
     lv_obj_set_pos(title_bar_, 0, 0);
@@ -39,7 +39,7 @@ void Panel::Create(lv_obj_t* parent, int x, int y, int w, int h) {
     lv_obj_set_style_bg_opa(title_bar_, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(title_bar_, 0, 0);
 
-    // 内容区域
+    // Content area
     content_ = lv_obj_create(panel_);
     lv_obj_set_size(content_, LV_PCT(100), LV_PCT(100) - 24);
     lv_obj_set_pos(content_, 0, 24);
@@ -90,7 +90,7 @@ void Panel::SetTitle(const char* title) {
 
     if (!lvgl_port_lock(0)) return;
 
-    // 删除旧的标题 label
+    // Remove the old title label
     uint32_t child_count = lv_obj_get_child_count(title_bar_);
     for (uint32_t i = 0; i < child_count; i++) {
         lv_obj_t* child = lv_obj_get_child(title_bar_, i);
@@ -141,7 +141,7 @@ void Panel::SetRadius(lv_coord_t radius) {
 }
 
 // ============================================================
-// ScrollView 实现
+// ScrollView implementation
 // ============================================================
 
 ScrollView::ScrollView() = default;
@@ -161,17 +161,17 @@ void ScrollView::Create(lv_obj_t* parent, int x, int y, int w, int h) {
     lv_obj_set_style_border_width(scroll_, 0, 0);
     lv_obj_set_style_pad_all(scroll_, 4, 0);
 
-    // 启用垂直滚动
+    // Enable vertical scrolling
     lv_obj_set_scroll_dir(scroll_, LV_DIR_VER);
     lv_obj_set_scrollbar_mode(scroll_, LV_SCROLLBAR_MODE_AUTO);
 
-    // 设置滚动条样式
+    // Set scrollbar style
     lv_obj_set_style_bg_color(scroll_, lv_color_hex(0x666666), LV_PART_SCROLLBAR);
     lv_obj_set_style_bg_opa(scroll_, LV_OPA_50, LV_PART_SCROLLBAR);
     lv_obj_set_style_width(scroll_, 4, LV_PART_SCROLLBAR);
     lv_obj_set_style_radius(scroll_, 2, LV_PART_SCROLLBAR);
 
-    // 使用 flex 布局管理子控件
+    // Use flex layout to manage child controls
     lv_obj_set_flex_flow(scroll_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(scroll_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 
@@ -204,7 +204,7 @@ void ScrollView::Hide() {
 }
 
 // ============================================================
-// IconButton 实现
+// IconButton implementation
 // ============================================================
 
 IconButton::IconButton() = default;
@@ -226,7 +226,7 @@ void IconButton::Create(lv_obj_t* parent, const char* icon_text, int w, int h) {
     lv_obj_set_style_pad_all(btn_, 0, 0);
     lv_obj_add_flag(btn_, LV_OBJ_FLAG_CLICKABLE);
 
-    // 居中 icon label
+    // Center the icon label
     icon_label_ = lv_label_create(btn_);
     lv_label_set_text(icon_label_, icon_text);
     lv_obj_set_style_text_font(icon_label_, &font_zectrix_16_1, 0);
@@ -288,7 +288,7 @@ void IconButton::Hide() {
 }
 
 // ============================================================
-// Bubble 实现
+// Bubble implementation
 // ============================================================
 
 Bubble::Bubble() = default;
@@ -302,22 +302,22 @@ void Bubble::Create(lv_obj_t* parent, Align align) {
 
     align_ = align;
 
-    // 气泡容器
+    // Bubble container
     bubble_ = lv_obj_create(parent);
-    lv_obj_set_width(bubble_, LV_PCT(80));  // 限制最大宽度 (Spec §3)
+    lv_obj_set_width(bubble_, LV_PCT(80));  // Limit max width (Spec §3)
     lv_obj_set_style_min_width(bubble_, 60, 0);
     lv_obj_set_style_radius(bubble_, 8, 0);
     lv_obj_set_style_pad_all(bubble_, 8, 0);
     lv_obj_set_style_border_width(bubble_, 0, 0);
 
-    // 文本标签 - 关键修复点
+    // Text label - key fix point
     label_ = lv_label_create(bubble_);
     lv_label_set_text(label_, "");
-    lv_label_set_long_mode(label_, LV_LABEL_LONG_WRAP);  // 自动换行 (Spec §3)
-    lv_obj_set_style_text_font(label_, &SourceHanSansSC_Regular_slim, 0);  // 使用中文字体
-    lv_obj_set_width(label_, LV_PCT(100));  // label 填满气泡宽度
+    lv_label_set_long_mode(label_, LV_LABEL_LONG_WRAP);  // Auto wrap (Spec §3)
+    lv_obj_set_style_text_font(label_, &SourceHanSansSC_Regular_slim, 0);  // Use CJK font
+    lv_obj_set_width(label_, LV_PCT(100));  // Label fills bubble width
 
-    // 应用样式
+    // Apply style
     ApplyStyle(align);
 
     lvgl_port_unlock();
@@ -338,7 +338,7 @@ void Bubble::AppendText(const char* chunk) {
     text_ += chunk;
     lv_label_set_text(label_, text_.c_str());
 
-    // 自动滚动到底部
+    // Auto-scroll to bottom
     lv_obj_scroll_to_view(bubble_, LV_ANIM_OFF);
 
     lvgl_port_unlock();
@@ -370,7 +370,7 @@ void Bubble::ApplyStyle(Align align) {
     if (!bubble_ || !label_ || !lvgl_port_lock(0)) return;
 
     switch (align) {
-        case Align::Right:  // 用户消息：黑底白字，右对齐
+        case Align::Right:  // User message: black background, white text, right-aligned
             lv_obj_set_style_bg_color(bubble_, lv_color_black(), 0);
             lv_obj_set_style_bg_opa(bubble_, LV_OPA_COVER, 0);
             lv_obj_set_style_border_width(bubble_, 0, 0);
@@ -378,7 +378,7 @@ void Bubble::ApplyStyle(Align align) {
             lv_obj_set_style_align(bubble_, LV_ALIGN_RIGHT_MID, 0);
             break;
 
-        case Align::Left:  // AI 回复：白底黑框，左对齐
+        case Align::Left:  // AI reply: white background, black border, left-aligned
             lv_obj_set_style_bg_color(bubble_, lv_color_white(), 0);
             lv_obj_set_style_bg_opa(bubble_, LV_OPA_COVER, 0);
             lv_obj_set_style_border_color(bubble_, lv_color_black(), 0);
@@ -387,7 +387,7 @@ void Bubble::ApplyStyle(Align align) {
             lv_obj_set_style_align(bubble_, LV_ALIGN_LEFT_MID, 0);
             break;
 
-        case Align::Center:  // 系统提示：透明背景，居中
+        case Align::Center:  // System hint: transparent background, centered
             lv_obj_set_style_bg_color(bubble_, lv_color_white(), 0);
             lv_obj_set_style_bg_opa(bubble_, LV_OPA_TRANSP, 0);
             lv_obj_set_style_border_width(bubble_, 0, 0);
@@ -400,7 +400,7 @@ void Bubble::ApplyStyle(Align align) {
 }
 
 // ============================================================
-// ProgressBar 实现
+// ProgressBar implementation
 // ============================================================
 
 ProgressBar::ProgressBar() = default;
@@ -418,7 +418,7 @@ void ProgressBar::Create(lv_obj_t* parent, int x, int y, int w, int h) {
     lv_bar_set_range(bar_, 0, 100);
     lv_bar_set_value(bar_, 0, LV_ANIM_OFF);
 
-    // 样式
+    // Style
     lv_obj_set_style_bg_color(bar_, lv_color_hex(0xDDDDDD), 0);
     lv_obj_set_style_bg_opa(bar_, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(bar_, lv_color_black(), LV_PART_INDICATOR);

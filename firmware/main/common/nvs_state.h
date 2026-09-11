@@ -19,7 +19,7 @@
  * @brief Persistent weather preferences
  */
 struct WeatherPrefs {
-    std::string city;     // User's preferred city (e.g. "杭州")
+    std::string city;     // User's preferred city (e.g. "杭州" / Hangzhou)
     bool auto_update;     // Auto-refresh weather data (default true)
     int update_interval;  // Hours between auto-updates (default 1)
 };

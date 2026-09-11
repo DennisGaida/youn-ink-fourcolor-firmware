@@ -5,9 +5,9 @@
  * Layout for 400x300 1bpp ePaper:
  *
  * ┌────────────────────────────────────────┐
- * │  ☀️   25°C           杭州              │
- * │       体感 27°C      14:30 更新        │
- * │       东南风 3级     湿度 45%          │
+ * │  ☀️   25°C           Hangzhou          │
+ * │       Feels like 27°C  Updated 14:30   │
+ * │       SE wind Lvl 3   Humidity 45%     │
  * └────────────────────────────────────────┘
  *
  * All x coordinates aligned to 8-byte boundary via align_x8().

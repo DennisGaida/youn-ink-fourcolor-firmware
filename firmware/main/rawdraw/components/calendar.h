@@ -70,7 +70,7 @@ public:
 
     static const char* GetLunarMonthName(int month);    // 正月..腊月
     static const char* GetLunarDayName(int day);         // 初一..三十
-    static const char* GetSolarTerm(int month, int day); // 节气名称
+    static const char* GetSolarTerm(int month, int day); // solar term name
 
     // ============================================================
     // Configuration

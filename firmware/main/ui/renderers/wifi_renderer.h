@@ -6,20 +6,20 @@
 
 namespace ui {
 
-// WiFi 状态可视化 (Spec §5)
-// 三种状态：连接中、已连接、断开
+// WiFi status visualization (Spec §5)
+// Three states: connecting, connected, disconnected
 
 enum class WifiState {
-    Connecting,   // 连接中：WiFi icon 闪烁 + "连接中..." + 进度条
-    Connected,    // 已连接：实心 WiFi icon + SSID + 信号强度
-    Disconnected, // 断开：叉号 WiFi icon + "已断开" + "按 BOOT 重连"
+    Connecting,   // Connecting: WiFi icon blinking + "Connecting..." + progress bar
+    Connected,    // Connected: solid WiFi icon + SSID + signal strength
+    Disconnected, // Disconnected: WiFi icon with an X + "Disconnected" + "Press BOOT to reconnect"
 };
 
 struct WifiStatus {
     WifiState state = WifiState::Disconnected;
     std::string ssid;
-    int signal_strength = 0;   // dBm (通常 -30 到 -90)
-    int progress = 0;          // 连接进度 (0-100)
+    int signal_strength = 0;   // dBm (typically -30 to -90)
+    int progress = 0;          // Connection progress (0-100)
     bool server_connected = false;
     std::string server_uri;
 };
@@ -29,20 +29,20 @@ public:
     WifiRenderer();
     ~WifiRenderer();
 
-    // 创建 WiFi 状态面板
+    // Create the WiFi status panel
     void Create(lv_obj_t* parent, int x, int y, int w, int h);
 
-    // 更新显示
+    // Update the display
     void Update(const WifiStatus& status);
 
-    // 获取根对象
+    // Get the root object
     lv_obj_t* root() const { return panel_; }
 
-    // 显示/隐藏
+    // Show/hide
     void Show();
     void Hide();
 
-    // 停止闪烁动画
+    // Stop the blinking animation
     void StopBlinking();
 
 private:
@@ -50,10 +50,10 @@ private:
     void RenderConnected(const WifiStatus& status);
     void RenderDisconnected(const WifiStatus& status);
 
-    // 获取 WiFi 信号强度 icon
+    // Get the WiFi signal strength icon
     const char* GetWifiIcon(int signal_dbm);
 
-    // 将 dBm 转为百分比
+    // Convert dBm to a percentage
     int SignalToPercent(int dbm) const;
 
     lv_obj_t* panel_ = nullptr;

@@ -8,7 +8,7 @@ namespace ui {
 constexpr char kTag[] = "SettingsPage";
 
 SettingsPage::SettingsPage(lv_obj_t* parent) {
-    // 创建 lv_list 控件
+    // Create the lv_list widget
     list_ = lv_list_create(parent);
     lv_obj_set_size(list_, LV_PCT(100), LV_PCT(100));
     lv_obj_set_style_bg_color(list_, lv_color_white(), 0);
@@ -18,16 +18,16 @@ SettingsPage::SettingsPage(lv_obj_t* parent) {
 }
 
 SettingsPage::~SettingsPage() {
-    // 释放回调内存
+    // Free callback memory
     for (auto* callback : callbacks_) {
         delete callback;
     }
     callbacks_.clear();
-    // 子控件会随 list 删除而删除
+    // Child widgets are deleted along with the list
 }
 
 const char* SettingsPage::GetItemSymbol(const SettingsItem& item) const {
-    // 根据类型和状态返回符号
+    // Return the symbol based on type and state
     switch (item.type) {
         case SettingsItemType::Checkbox:
             return item.checked ? "[x]" : "[ ]";
@@ -40,7 +40,7 @@ const char* SettingsPage::GetItemSymbol(const SettingsItem& item) const {
 }
 
 void SettingsPage::SetItems(const std::vector<SettingsItem>& items) {
-    // 清除现有项和回调内存
+    // Clear existing items and callback memory
     for (auto* callback : callbacks_) {
         delete callback;
     }
@@ -51,17 +51,17 @@ void SettingsPage::SetItems(const std::vector<SettingsItem>& items) {
     items_.clear();
     item_data_ = items;
 
-    // 创建新列表项
+    // Create new list items
     for (const SettingsItem& item : items) {
         const char* symbol = GetItemSymbol(item);
 
-        // 创建列表按钮
+        // Create list button
         lv_obj_t* btn = lv_list_add_button(list_, symbol, item.label.c_str());
         lv_obj_set_style_bg_color(btn, lv_color_white(), 0);
         lv_obj_set_style_border_width(btn, 0, 0);
         lv_obj_set_style_text_font(btn, &SourceHanSansSC_Regular_slim, 0);
 
-        // 显示当前值（附加到按钮右侧）
+        // Show the current value (appended to the right side of the button)
         if (!item.value.empty()) {
             lv_obj_t* value_label = lv_label_create(btn);
             lv_obj_set_style_text_font(value_label, &SourceHanSansSC_Regular_slim, 0);
@@ -69,7 +69,7 @@ void SettingsPage::SetItems(const std::vector<SettingsItem>& items) {
             lv_obj_align(value_label, LV_ALIGN_RIGHT_MID, -8, 0);
         }
 
-        // 设置点击回调
+        // Set the click callback
         if (item.on_click) {
             auto* callback_ptr = new std::function<void()>(item.on_click);
             callbacks_.push_back(callback_ptr);
@@ -89,15 +89,15 @@ void SettingsPage::UpdateItem(int index, const std::string& value) {
     if (index >= 0 && index < static_cast<int>(items_.size())) {
         lv_obj_t* btn = items_[index];
 
-        // 更新数据
+        // Update data
         item_data_[index].value = value;
 
-        // 查找值标签（右侧子控件）
+        // Find the value label (right-side child widget)
         lv_obj_t* value_label = lv_obj_get_child(btn, 1);
         if (value_label) {
             lv_label_set_text(value_label, value.c_str());
         } else if (!value.empty()) {
-            // 如果之前没有值标签，创建新的
+            // If there was no value label before, create a new one
             value_label = lv_label_create(btn);
             lv_obj_set_style_text_font(value_label, &SourceHanSansSC_Regular_slim, 0);
             lv_label_set_text(value_label, value.c_str());
@@ -108,17 +108,17 @@ void SettingsPage::UpdateItem(int index, const std::string& value) {
 
 void SettingsPage::UpdateChecked(int index, bool checked) {
     if (index >= 0 && index < static_cast<int>(items_.size())) {
-        // 更新数据
+        // Update data
         item_data_[index].checked = checked;
 
-        // 更新显示符号
+        // Update the displayed symbol
         const char* symbol = GetItemSymbol(item_data_[index]);
         lv_obj_t* btn = items_[index];
 
-        // 更新按钮符号（第一个子控件通常是图标）
-        // lv_list_add_button 的图标在按钮内部的 label 中
-        // 简化处理：重新创建按钮或直接更新文本
-        // 这里使用简化方案：更新整个按钮
+        // Update the button symbol (the first child widget is usually the icon)
+        // The icon added by lv_list_add_button lives in the label inside the button
+        // Simplified handling: recreate the button or just update the text directly
+        // Here we use the simplified approach: update the whole button
         lv_obj_t* icon_label = lv_obj_get_child(btn, 0);
         if (icon_label && lv_obj_check_type(icon_label, &lv_label_class)) {
             lv_label_set_text(icon_label, symbol);
@@ -127,7 +127,7 @@ void SettingsPage::UpdateChecked(int index, bool checked) {
 }
 
 void SettingsPage::Refresh() {
-    // LVGL 会自动处理刷新
+    // LVGL handles the refresh automatically
 }
 
 }  // namespace ui

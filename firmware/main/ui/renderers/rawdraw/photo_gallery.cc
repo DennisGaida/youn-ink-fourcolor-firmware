@@ -477,8 +477,9 @@ void PhotoGalleryRenderer::RenderPhotoInRect(uint8_t* fb, int fb_width, const Ph
     if (entry.file_size == 0) {
         const char* label = i18n::Tr("无图片", "No image");
         int tw = MeasureTextWidth(label, font_);
-        // FIX: 改用 InkCenteredTextTopYInBox，避免 line_height 居中导致中文偏上
-        // 参见 wiki/projects/notellm-baseline-alignment.md
+        // FIX: switched to InkCenteredTextTopYInBox to avoid line_height centering
+        // pushing Chinese text too high
+        // See wiki/projects/notellm-baseline-alignment.md
         DrawText(fb, fb_width, x + (w - tw) / 2, InkCenteredTextTopYInBox(font_, label, y, h, 0),
                  label, font_, frame_style.fg);
         return;

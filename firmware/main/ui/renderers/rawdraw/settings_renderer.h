@@ -211,7 +211,7 @@ private:
     void RenderServerListDialog(uint8_t* fb, int width, int height);
     void RenderThemeDialog(uint8_t* fb, int width, int height);
     void RenderOtaDialog(uint8_t* fb, int width, int height);
-    void RenderOtaConfirmDialog(uint8_t* fb, int width, int height);  // OTA 确认弹窗
+    void RenderOtaConfirmDialog(uint8_t* fb, int width, int height);  // OTA confirmation dialog
     void UpdateVolumeValue(int delta, bool commit);
 
     std::vector<SettingsItemDef> items_;
@@ -272,10 +272,10 @@ private:
     std::function<void(int, bool, bool)> ota_dialog_handler_;
     static constexpr int kOtaVisibleRows = 4;
 
-    // OTA confirm dialog state (弹窗确认固件更新)
+    // OTA confirm dialog state (confirmation dialog for firmware update)
     bool showing_ota_confirm_dialog_ = false;
-    int ota_confirm_selected_ = 0;  // 0=确认更新, 1=取消
-    std::string ota_confirm_firmware_name_;  // 待更新的固件名称
+    int ota_confirm_selected_ = 0;  // 0=confirm update, 1=cancel
+    std::string ota_confirm_firmware_name_;  // Name of the firmware pending update
 
     const lv_font_t* font_ = nullptr;
     const lv_font_t* title_font_ = nullptr;

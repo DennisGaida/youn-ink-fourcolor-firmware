@@ -21,7 +21,7 @@ public:
     void SetPowerSaveMode(bool on) override;
     bool SnapshotToJpeg(std::string& jpeg_data, int quality = 80);
 
-    // 获取 LVGL display 对象
+    // Get the LVGL display object
     lv_display_t* GetLvDisplay() override { return display_; }
 
 protected:

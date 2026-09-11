@@ -7,40 +7,40 @@
 
 namespace ui {
 
-// Todo 任务项
+// Todo task item
 struct TodoItem {
     std::string text;
     bool completed = false;
 };
 
-// Todo 页面 - 任务列表
+// Todo page - task list
 class TodoPage {
 public:
     TodoPage(lv_obj_t* parent);
     ~TodoPage();
 
-    // 清空列表
+    // Clear the list
     void Clear();
 
-    // 设置任务列表
+    // Set the task list
     void SetItems(const std::vector<TodoItem>& items);
 
-    // 添加任务
+    // Add a task
     void AddItem(const std::string& text, bool completed = false);
 
-    // 更新任务状态
+    // Update task status
     void UpdateItem(int index, bool completed);
 
-    // 删除任务
+    // Remove a task
     void RemoveItem(int index);
 
-    // 刷新显示
+    // Refresh display
     void Refresh();
 
 private:
-    lv_obj_t* list_ = nullptr;        // lv_list 容器
-    std::vector<lv_obj_t*> items_;    // 列表项控件 (button objects)
-    std::vector<std::string> texts_;  // 原始文本（不含前缀）
+    lv_obj_t* list_ = nullptr;        // lv_list container
+    std::vector<lv_obj_t*> items_;    // List item widgets (button objects)
+    std::vector<std::string> texts_;  // Original text (without prefix)
 };
 
 }  // namespace ui

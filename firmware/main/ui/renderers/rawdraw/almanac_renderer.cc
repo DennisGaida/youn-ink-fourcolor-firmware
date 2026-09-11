@@ -10,7 +10,7 @@
 #include "almanac_renderer.h"
 #include "rawdraw/rawdraw.h"
 #include "rawdraw/style.h"
-#include "rawdraw/layout_utils.h"  // FIX: 使用 InkCenteredTextTopYInBox 替代 line_height 居中
+#include "rawdraw/layout_utils.h"  // FIX: use InkCenteredTextTopYInBox instead of line_height centering
 #include "rawdraw/components/calendar.h"
 #include "rawdraw/theme.h"
 #include "i18n.h"
@@ -86,7 +86,7 @@ static const char* GetSolarTerm(int month, int day) {
     return nullptr;
 }
 
-// Simplified yiji (宜忌) based on lunar day patterns
+// Simplified yiji (auspicious/inauspicious activities) based on lunar day patterns
 // This is a traditional approximation, not a full almanac calculation
 static const char* kYiTableZh[][4] = {
     {"祭祀", "祈福", "出行", "动土"},
@@ -170,7 +170,7 @@ void AlmanacRenderer::RefreshData() {
     // Solar term
     solar_term_ = GetSolarTerm(month_, day_);
 
-    // Yiji (宜忌) - simplified based on lunar day
+    // Yiji (auspicious/inauspicious) - simplified based on lunar day
     yi_idx_ = (lunar_.lunar_day - 1) % 10;
     ji_idx_ = (lunar_.lunar_day) % 10;
 }
@@ -203,7 +203,7 @@ void AlmanacRenderer::Render(uint8_t* fb, int width, int height) {
     DrawTitleBar(fb, width);
 
     // === Large lunar year name + date ===
-    // e.g. "丙午年 三月初八"
+    // e.g. "Bingwu Year 3rd Month, 8th Day"
     char lunar_full[64];
     if (lunar_.lunar_month > 0 && lunar_.lunar_day > 0) {
         snprintf(lunar_full, sizeof(lunar_full), i18n::Tr("%s年 %s%s", "%s Year %s %s"),
@@ -242,7 +242,7 @@ void AlmanacRenderer::Render(uint8_t* fb, int width, int height) {
     DrawHLine(fb, width, y, Style::kSpacingLG, width - Style::kSpacingLG, border);
     y += Style::kSpacingSM;
 
-    // === 宜 (auspicious) section ===
+    // === Yi (auspicious) section ===
     const char* yi_label = i18n::Tr("宜", "Do");
     DrawText(fb, width, Style::kSpacingLG, y, yi_label, title_font_, accent);
     int yi_label_w = MeasureTextWidth(yi_label, title_font_);
@@ -255,7 +255,7 @@ void AlmanacRenderer::Render(uint8_t* fb, int width, int height) {
     }
     y += font_->line_height + Style::kSpacingMD;
 
-    // === 忌 (inauspicious) section ===
+    // === Ji (inauspicious) section ===
     const char* ji_label = i18n::Tr("忌", "Avoid");
     DrawText(fb, width, Style::kSpacingLG, y, ji_label, title_font_, danger);
     int ji_label_w = MeasureTextWidth(ji_label, title_font_);
@@ -290,8 +290,9 @@ void AlmanacRenderer::DrawTitleBar(uint8_t* fb, int width) {
     DrawHLine(fb, width, line_y, 0, width, border);
     DrawHLine(fb, width, line_y + 1, 0, width, border);
 
-    // FIX: 改用 InkCenteredTextTopYInBox，避免 line_height 居中导致中文偏上
-    // 参见 wiki/projects/notellm-baseline-alignment.md
+    // FIX: use InkCenteredTextTopYInBox instead, to avoid line_height centering
+    // pushing Chinese text too high
+    // See wiki/projects/notellm-baseline-alignment.md
     const char* title_str = i18n::Tr("老黄历", "Almanac");
     int title_text_y = InkCenteredTextTopYInBox(font_, title_str, title_y_start, title_bar_h, 1);
     DrawText(fb, width, Style::kSpacingLG, title_text_y, title_str, font_, text);

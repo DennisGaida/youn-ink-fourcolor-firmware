@@ -87,8 +87,8 @@ public:
     static const char* GetTimeString();
 
     /**
-     * @brief Get date string in short format (default: "M月D日")
-     * Returns "4月27日" style. If date_format is "iso", returns "04-27".
+     * @brief Get date string in short format (default: "M月D日" / "M-month D-day")
+     * Returns "4月27日" (e.g. "April 27") style. If date_format is "iso", returns "04-27".
      */
     static std::string GetDateString(const char* date_format = nullptr);
 

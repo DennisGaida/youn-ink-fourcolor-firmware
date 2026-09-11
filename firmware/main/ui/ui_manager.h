@@ -17,50 +17,50 @@
 
 namespace ui {
 
-// 页面索引（7个页面，按 spec_v2 顺序）
+// Page index (7 pages, in spec_v2 order)
 enum class PageId {
-    Chat = 0,      // AI 对话
-    Todo = 1,      // Todo 任务列表
-    Log = 2,       // 系统日志
-    LifeBar = 3,   // 人生进度
-    Almanac = 4,   // 老黄历
-    Weather = 5,   // 天气看板
-    Settings = 6,  // 设置
-    Count = 7,     // 页面总数
+    Chat = 0,      // AI chat
+    Todo = 1,      // Todo task list
+    Log = 2,       // System log
+    LifeBar = 3,   // Life progress
+    Almanac = 4,   // Almanac
+    Weather = 5,   // Weather dashboard
+    Settings = 6,  // Settings
+    Count = 7,     // Total number of pages
 };
 
-// UI 管理器 - TabView 容器 + 状态栏
+// UI manager - TabView container + status bar
 class UiManager {
 public:
     UiManager();
     ~UiManager();
 
-    // 初始化 UI 框架（传入 LVGL display）
+    // Initialize the UI framework (pass in the LVGL display)
     void Init(lv_display_t* display);
 
-    // 切换页面
+    // Switch page
     void SwitchPage(PageId page);
 
-    // 获取当前页面
+    // Get the current page
     PageId GetCurrentPage() const { return current_page_; }
 
-    // 刷新当前页面（静态刷新，用于墨水屏）
+    // Refresh the current page (static refresh, for e-paper)
     void RefreshNow();
 
-    // 触发全局刷新（清除残影）
+    // Trigger a full refresh (clears ghosting)
     void RequestFullRefresh();
 
-    // 清除内容区域（保留状态栏，spec_v3 §5）
+    // Clear the content area (preserve the status bar, spec_v3 §5)
     void ClearContentArea();
 
-    // 更新状态栏
+    // Update the status bar
     void UpdateStatusBar(const StatusBarData& data);
 
-    // 页面对象访问
+    // Page object access
     lv_obj_t* GetTabView() const { return tabview_; }
     lv_obj_t* GetPage(PageId page) const;
 
-    // 页面实例访问
+    // Page instance access
     ChatPage* GetChatPage() { return chat_page_.get(); }
     TodoPage* GetTodoPage() { return todo_page_.get(); }
     LogPage* GetLogPage() { return log_page_.get(); }
@@ -72,15 +72,15 @@ public:
 private:
     lv_display_t* display_ = nullptr;
     lv_obj_t* tabview_ = nullptr;
-    lv_obj_t* tabs_[7] = {nullptr};  // 7 个页面对象
+    lv_obj_t* tabs_[7] = {nullptr};  // 7 page objects
     PageId current_page_ = PageId::Chat;
     int refresh_count_ = 0;
     bool full_refresh_pending_ = false;
 
-    // 状态栏（固定在顶部）
+    // Status bar (fixed at the top)
     std::unique_ptr<StatusBar> status_bar_;
 
-    // 页面实例
+    // Page instances
     std::unique_ptr<ChatPage> chat_page_;
     std::unique_ptr<TodoPage> todo_page_;
     std::unique_ptr<LogPage> log_page_;

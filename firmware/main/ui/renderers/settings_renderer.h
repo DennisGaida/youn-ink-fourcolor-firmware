@@ -9,14 +9,14 @@
 
 namespace ui {
 
-// 设置项类型
+// Settings item type
 enum class SettingsItemType {
-    Normal,    // 普通项，显示 >
-    Checkbox,  // 可勾选项
-    Action,    // 操作项
+    Normal,    // Normal item, shows >
+    Checkbox,  // Checkable item
+    Action,    // Action item
 };
 
-// 设置项结构
+// Settings item structure
 struct SettingsItemDef {
     std::string label;
     std::string value;
@@ -26,37 +26,37 @@ struct SettingsItemDef {
     std::function<void()> on_click;
 };
 
-// 设置页面渲染器 (Spec §6)
-// 所有菜单项使用 font_zectrix icon，现代 UI 风格
+// Settings page renderer (Spec §6)
+// All menu items use font_zectrix icons for a modern UI style
 class SettingsRenderer {
 public:
     SettingsRenderer();
     ~SettingsRenderer();
 
-    // 创建设置页面
+    // Create the settings page
     void Create(lv_obj_t* parent);
 
-    // 设置设置项列表
+    // Set the list of settings items
     void SetItems(const std::vector<SettingsItemDef>& items);
 
-    // 更新单项显示值
+    // Update a single item's displayed value
     void UpdateItem(int index, const std::string& value);
 
-    // 更新 Checkbox 项的选中状态
+    // Update a Checkbox item's checked state
     void UpdateChecked(int index, bool checked);
 
-    // 获取根对象
+    // Get the root object
     lv_obj_t* root() const { return container_; }
 
-    // 显示/隐藏
+    // Show/hide
     void Show();
     void Hide();
 
 private:
-    // 创建单个设置项
+    // Create a single settings item
     lv_obj_t* CreateItem(lv_obj_t* parent, const SettingsItemDef& def, int index);
 
-    // 获取 checkbox 图标
+    // Get the checkbox icon
     const char* GetCheckboxIcon(bool checked) const;
 
     lv_obj_t* container_ = nullptr;

@@ -3,11 +3,11 @@
  * @brief Chat bubble implementation - v3.8.0 visual fix
  *
  * F2 FIXES:
- * - 去掉复杂圆角边框，改用简单矩形色块
- * - 绘制顺序：先画背景 → 再画文字
- * - User 消息：黑色矩形 + 白色文字
- * - AI 消息：不画背景（白色默认）+ 黑色文字
- * - 移除圆角绘制，减少渲染问题
+ * - Drop the complex rounded border, use simple rectangular color blocks instead
+ * - Draw order: background first -> then text
+ * - User message: black rectangle + white text
+ * - AI message: no background (default white) + black text
+ * - Remove rounded-rect drawing to reduce rendering issues
  */
 
 #include "bubble.h"
@@ -237,19 +237,19 @@ void Bubble::Draw(uint8_t* fb, int width, int height) {
     bounds = clamp_rect(bounds, width, height);
     if (rect_area(bounds) <= 0) return;
 
-    // F2: 绘制顺序 = 背景 → 文字
-    // 圆角矩形背景，使用 radius_ 参数
+    // F2: Draw order = background -> text
+    // Rounded-rect background, using the radius_ parameter
 
-    // === F2: Background (先画背景色块) ===
+    // === F2: Background (draw the background color block first) ===
     if (align_ == BubbleAlign::Right) {
-        // User 消息：主题选中/强调背景
+        // User message: theme selection/highlight background
         if (radius_ > 0) {
             DrawRoundRect(fb, width, bounds, radius_, fill_color_, border_color_, 0);
         } else {
             DrawRect(fb, width, bounds, fill_color_);
         }
     } else if (border_width_ > 0) {
-        // AI/System 消息有边框：画主题表面 + 边框
+        // AI/System message with border: draw theme surface + border
         if (radius_ > 0) {
             DrawRoundRect(fb, width, bounds, radius_, fill_color_, border_color_, border_width_);
         } else {
@@ -257,7 +257,7 @@ void Bubble::Draw(uint8_t* fb, int width, int height) {
             DrawRectBorder(fb, width, bounds, border_width_, border_color_);
         }
     } else {
-        // AI/System 消息无边框：不画背景（默认白色），只画文字
+        // AI/System message without border: don't draw a background (default white), just draw text
     }
 
     // === Text (render line-by-line with explicit line spacing >=24px) ===

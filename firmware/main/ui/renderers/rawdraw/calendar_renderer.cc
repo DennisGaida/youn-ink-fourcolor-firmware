@@ -2,8 +2,8 @@
  * @file calendar_renderer.cc
  * @brief Monthly calendar grid renderer — delegates to rawdraw::Calendar component
  *
- * Navigation: UP/DOWN=翻月, BOOT=进入选择模式/确认日期
- * In selection mode: UP/DOWN=移动光标, BOOT=确认选择
+ * Navigation: UP/DOWN=change month, BOOT=enter selection mode/confirm date
+ * In selection mode: UP/DOWN=move cursor, BOOT=confirm selection
  */
 
 #include "calendar_renderer.h"

@@ -107,7 +107,7 @@ void PhotoDetailRenderer::Render(uint8_t* fb, int width, int height) {
         modal.CenterInScreen(width, height, 52);
         modal.Draw(fb, width, height);
     } else {
-        // 图片详情页去掉底栏，最大化展示区域
+        // Photo detail page has no footer bar, to maximize the display area
         const int frame_x = 8;
         const int frame_y = Style::kStatusBarHeight + 4;
         const int frame_w = width - 16;
@@ -142,8 +142,8 @@ void PhotoDetailRenderer::Render(uint8_t* fb, int width, int height) {
         DrawMetadataModal(fb, width, height);
     }
 
-    // 图片详情页无底栏，最大化展示
-    // 操作提示：UP/DN翻页，BOOT查看信息（可通过 statusBar 或 modal 提示）
+    // Photo detail page has no footer bar, to maximize the display area
+    // Controls: UP/DN to page, BOOT to view info (shown via statusBar or modal hint)
 
     needs_full_refresh_ = false;
 }

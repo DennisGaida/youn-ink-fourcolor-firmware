@@ -1,6 +1,6 @@
 /**
  * @file weather_api.h
- * @brief HeWeather (和风天气) API client for ESP32
+ * @brief HeWeather (和风天气 / "Wind and Weather") API client for ESP32
  *
  * Fetches real-time weather data via HTTP GET. Uses esp_http_client
  * with select()-based timeout (NO setsockopt(SO_RCVTIMEO)).
@@ -31,7 +31,7 @@
  */
 struct WeatherForecastDay {
     std::string label;        // Today / Tomorrow / etc.
-    std::string weather_text; // 晴 / 多云 / 小雨
+    std::string weather_text; // Sunny / Cloudy / Light rain
     std::string icon_code;    // QWeather icon code string
     int32_t temp_min = 0;
     int32_t temp_max = 0;
@@ -42,12 +42,12 @@ struct WeatherData {
     std::string temp;         // Current temperature (e.g., "25")
     std::string feels_like;   // Feels like temperature (e.g., "27")
     std::string weather_icon; // QWeather icon code for current weather (e.g., "100")
-    std::string weather_text; // Weather condition (e.g., "晴", "多云", "小雨")
-    std::string wind_dir;     // Wind direction (e.g., "东南风")
+    std::string weather_text; // Weather condition (e.g., "晴" / Sunny, "多云" / Cloudy, "小雨" / Light rain)
+    std::string wind_dir;     // Wind direction (e.g., "东南风" / Southeast wind)
     std::string wind_scale;   // Wind scale (e.g., "3")
     std::string humidity;     // Humidity percentage (e.g., "45")
     std::string update_time;  // Last update time (e.g., "14:30")
-    std::string air_quality;  // Air quality text (e.g., "优")
+    std::string air_quality;  // Air quality text (e.g., "优" / Excellent)
     int32_t air_aqi = -1;     // AQI number
     int32_t temp_int;         // Numeric temperature for icon selection
     std::vector<WeatherForecastDay> forecast;
@@ -58,12 +58,12 @@ struct WeatherData {
  * Maps weather condition text to icon character codes.
  */
 enum class WeatherIcon {
-    Sunny,       // 晴
-    Cloudy,      // 多云
-    Overcast,    // 阴
+    Sunny,       // 晴 (sunny)
+    Cloudy,      // 多云 (cloudy)
+    Overcast,    // 阴 (overcast)
     Rain,        // 雨 (any rain type)
-    Snow,        // 雪
-    Fog,         // 雾
+    Snow,        // 雪 (snow)
+    Fog,         // 雾 (fog)
     Unknown,     // Fallback
 };
 

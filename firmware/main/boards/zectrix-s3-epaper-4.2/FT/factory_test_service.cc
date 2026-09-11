@@ -87,23 +87,23 @@ int StepIndex(FactoryTestStep step) {
 const char* StepTitle(FactoryTestStep step) {
     switch (step) {
         case FactoryTestStep::kRf:
-            return "RF 测试";
+            return "RF Test";
         case FactoryTestStep::kAudio:
-            return "音频测试";
+            return "Audio Test";
         case FactoryTestStep::kRtc:
-            return "RTC 测试";
+            return "RTC Test";
         case FactoryTestStep::kCharge:
-            return "充电测试";
+            return "Charging Test";
         case FactoryTestStep::kLed:
-            return "LED 测试";
+            return "LED Test";
         case FactoryTestStep::kKeys:
-            return "按键测试";
+            return "Button Test";
         case FactoryTestStep::kNfc:
-            return "NFC 测试";
+            return "NFC Test";
         case FactoryTestStep::kComplete:
-            return "全部通过";
+            return "All Passed";
         case FactoryTestStep::kFailed:
-            return "测试失败";
+            return "Test Failed";
         default:
             return "";
     }
@@ -136,7 +136,7 @@ void ResetSnapshot(FactoryTestSnapshot* snapshot) {
     *snapshot = FactoryTestSnapshot{};
     snapshot->active = true;
     FillLine(snapshot->title, sizeof(snapshot->title), "%s", StepTitle(FactoryTestStep::kRf));
-    FillLine(snapshot->hint, sizeof(snapshot->hint), "准备开始FT测试");
+    FillLine(snapshot->hint, sizeof(snapshot->hint), "Preparing to start FT test");
 }
 
 uint32_t ButtonToBit(FactoryTestButton button) {
@@ -437,8 +437,8 @@ void FactoryTestService::StartFlow() {
             std::lock_guard<std::mutex> lock(mutex_);
             snapshot_.current_state = FactoryTestStepState::kFail;
             snapshot_.terminal_failure = true;
-            FillLine(snapshot_.hint, sizeof(snapshot_.hint), "FT测试任务启动失败");
-            FillLine(snapshot_.footer, sizeof(snapshot_.footer), "长按确认键关机");
+            FillLine(snapshot_.hint, sizeof(snapshot_.hint), "FT test task failed to start");
+            FillLine(snapshot_.footer, sizeof(snapshot_.footer), "Hold Confirm to power off");
         }
         PublishSnapshotLocked();
     }
@@ -490,7 +490,7 @@ void FactoryTestService::FlowTask() {
         {
             std::lock_guard<std::mutex> lock(mutex_);
             snapshot_.terminal_failure = true;
-            FillLine(snapshot_.footer, sizeof(snapshot_.footer), "长按确认键关机");
+            FillLine(snapshot_.footer, sizeof(snapshot_.footer), "Hold Confirm to power off");
         }
         PublishSnapshotLocked();
 
@@ -511,9 +511,9 @@ void FactoryTestService::FlowTask() {
         }
     };
 
-    set_step_state(FactoryTestStep::kRf, FactoryTestStepState::kRunning, "正在扫描目标 Wi-Fi");
+    set_step_state(FactoryTestStep::kRf, FactoryTestStepState::kRunning, "Scanning for target Wi-Fi");
     if (!EnsureWifiReadyForScan()) {
-        mark_failure_and_wait_poweroff(FactoryTestStep::kRf, "Wi-Fi 初始化失败");
+        mark_failure_and_wait_poweroff(FactoryTestStep::kRf, "Wi-Fi initialization failed");
         return;
     }
 
@@ -530,8 +530,8 @@ void FactoryTestService::FlowTask() {
             } else {
                 FillLine(snapshot_.detail2, sizeof(snapshot_.detail2), "RSSI=%d dBm", rssi);
             }
-            FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "连续命中=%d/%d", consecutive_hits, kRfPassCount);
-            FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "阈值=%d dBm", kRfThresholdDbm);
+            FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "Consecutive hits=%d/%d", consecutive_hits, kRfPassCount);
+            FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "Threshold=%d dBm", kRfThresholdDbm);
         }
         PublishSnapshotLocked();
         if (consecutive_hits >= kRfPassCount) {
@@ -539,15 +539,15 @@ void FactoryTestService::FlowTask() {
         }
         vTaskDelay(kRfRetryDelayTicks);
     }
-    set_step_state(FactoryTestStep::kRf, FactoryTestStepState::kPass, "RF 测试通过");
+    set_step_state(FactoryTestStep::kRf, FactoryTestStepState::kPass, "RF test passed");
     esp_wifi_stop();
 
-    set_step_state(FactoryTestStep::kAudio, FactoryTestStepState::kRunning, "正在播放/录音/解码");
+    set_step_state(FactoryTestStep::kAudio, FactoryTestStepState::kRunning, "Playing/recording/decoding");
     while (true) {
         const AcousticSelftestSummary summary = RunAudioPathTestOnce();
         {
             std::lock_guard<std::mutex> lock(mutex_);
-            FillLine(snapshot_.detail1, sizeof(snapshot_.detail1), "状态=%s", summary.pass ? "PASS" : "FAIL");
+            FillLine(snapshot_.detail1, sizeof(snapshot_.detail1), "Status=%s", summary.pass ? "PASS" : "FAIL");
             FillLine(snapshot_.detail2, sizeof(snapshot_.detail2), "round=%d fc=%d", summary.round, summary.fc);
             FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "reason=%s",
                      AcousticSelftest::FailureReasonToString(summary.reason));
@@ -559,9 +559,9 @@ void FactoryTestService::FlowTask() {
         }
         vTaskDelay(kAudioRetryDelayTicks);
     }
-    set_step_state(FactoryTestStep::kAudio, FactoryTestStepState::kPass, "音频测试通过");
+    set_step_state(FactoryTestStep::kAudio, FactoryTestStepState::kPass, "Audio test passed");
 
-    set_step_state(FactoryTestStep::kRtc, FactoryTestStepState::kRunning, "校验 RTC 走时和 5 秒触发");
+    set_step_state(FactoryTestStep::kRtc, FactoryTestStepState::kRunning, "Verifying RTC timekeeping and 5-second trigger");
     bool rtc_passed = false;
     while (true) {
         auto* rtc = ZectrixGetRtc();
@@ -571,7 +571,7 @@ void FactoryTestService::FlowTask() {
                 FillLine(snapshot_.detail1, sizeof(snapshot_.detail1), "RTC=NOT_FOUND");
                 FillLine(snapshot_.detail2, sizeof(snapshot_.detail2), "NOW=--:--:--");
                 FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "INT=WAIT TF=0");
-                FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "RTC 重试中");
+                FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "RTC retrying");
             }
             PublishSnapshotLocked();
             vTaskDelay(kRtcRetryDelayTicks);
@@ -657,10 +657,10 @@ void FactoryTestService::FlowTask() {
             if (!read_ok) {
                 {
                     std::lock_guard<std::mutex> lock(mutex_);
-                    FillLine(snapshot_.hint, sizeof(snapshot_.hint), "RTC 读回失败");
+                    FillLine(snapshot_.hint, sizeof(snapshot_.hint), "RTC readback failed");
                 }
                 PublishSnapshotLocked();
-                mark_failure_and_wait_poweroff(FactoryTestStep::kRtc, "RTC 读回失败");
+                mark_failure_and_wait_poweroff(FactoryTestStep::kRtc, "RTC readback failed");
                 return;
             }
 
@@ -670,7 +670,7 @@ void FactoryTestService::FlowTask() {
                     snapshot_.current_state = FactoryTestStepState::kPass;
                     snapshot_.step_states[static_cast<size_t>(StepIndex(FactoryTestStep::kRtc))] =
                         FactoryTestStepState::kPass;
-                    FillLine(snapshot_.hint, sizeof(snapshot_.hint), "RTC 走时和 5 秒触发通过");
+                    FillLine(snapshot_.hint, sizeof(snapshot_.hint), "RTC timekeeping and 5-second trigger passed");
                     FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "INT=%s TF=%d",
                              fired ? "HIT" : "WAIT", flag_hit ? 1 : 0);
                     FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "elapsed=%d/%ds",
@@ -684,19 +684,19 @@ void FactoryTestService::FlowTask() {
             if (!time_reached) {
                 {
                     std::lock_guard<std::mutex> lock(mutex_);
-                    FillLine(snapshot_.hint, sizeof(snapshot_.hint), "RTC 时间未走到 08:00:05");
+                    FillLine(snapshot_.hint, sizeof(snapshot_.hint), "RTC time did not reach 08:00:05");
                 }
                 PublishSnapshotLocked();
-                mark_failure_and_wait_poweroff(FactoryTestStep::kRtc, "RTC 时间未正常递增");
+                mark_failure_and_wait_poweroff(FactoryTestStep::kRtc, "RTC time did not increment properly");
                 return;
             }
 
             {
                 std::lock_guard<std::mutex> lock(mutex_);
-                FillLine(snapshot_.hint, sizeof(snapshot_.hint), "RTC 5 秒触发超时");
+                FillLine(snapshot_.hint, sizeof(snapshot_.hint), "RTC 5-second trigger timed out");
             }
             PublishSnapshotLocked();
-            mark_failure_and_wait_poweroff(FactoryTestStep::kRtc, "RTC 5 秒触发失败");
+            mark_failure_and_wait_poweroff(FactoryTestStep::kRtc, "RTC 5-second trigger failed");
             return;
         }
         {
@@ -704,17 +704,17 @@ void FactoryTestService::FlowTask() {
             FillLine(snapshot_.detail1, sizeof(snapshot_.detail1), "SET=08:00:00");
             FillLine(snapshot_.detail2, sizeof(snapshot_.detail2), "NOW=--:--:--");
             FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "INT=WAIT TF=0");
-            FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "elapsed=0/%ds 重试中", kRtcTestDurationSeconds);
+            FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "elapsed=0/%ds retrying", kRtcTestDurationSeconds);
         }
         PublishSnapshotLocked();
         vTaskDelay(kRtcRetryDelayTicks);
     }
     if (!rtc_passed) {
-        mark_failure_and_wait_poweroff(FactoryTestStep::kRtc, "RTC 测试未完成");
+        mark_failure_and_wait_poweroff(FactoryTestStep::kRtc, "RTC test incomplete");
         return;
     }
 
-    set_step_state(FactoryTestStep::kCharge, FactoryTestStepState::kRunning, "请插入 USB");
+    set_step_state(FactoryTestStep::kCharge, FactoryTestStepState::kRunning, "Please plug in USB");
     while (true) {
         int battery = 0;
         const bool has_battery = ReadBatteryPercent(&battery);
@@ -729,9 +729,9 @@ void FactoryTestService::FlowTask() {
             FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "BAT=%s",
                      has_battery ? (std::to_string(battery) + "%").c_str() : "--");
             if (charge.no_battery) {
-                FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "未检测到电池");
+                FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "No battery detected");
             } else if (charge.full && has_battery && battery <= 97) {
-                FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "满电信号有效但电量不足");
+                FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "Full-charge signal valid but level too low");
             } else {
                 snapshot_.detail4[0] = '\0';
             }
@@ -742,13 +742,13 @@ void FactoryTestService::FlowTask() {
         }
         vTaskDelay(kChargePollTicks);
     }
-    set_step_state(FactoryTestStep::kCharge, FactoryTestStepState::kPass, "充电测试通过");
+    set_step_state(FactoryTestStep::kCharge, FactoryTestStepState::kPass, "Charging test passed");
 
-    set_step_state(FactoryTestStep::kLed, FactoryTestStepState::kRunning, "LED 1 秒闪烁，请目视确认");
+    set_step_state(FactoryTestStep::kLed, FactoryTestStepState::kRunning, "LED blinking for 1 second, please confirm visually");
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        FillLine(snapshot_.detail1, sizeof(snapshot_.detail1), "GPIO3 正在 1 秒闪烁");
-        FillLine(snapshot_.detail2, sizeof(snapshot_.detail2), "确认键通过，下键失败");
+        FillLine(snapshot_.detail1, sizeof(snapshot_.detail1), "GPIO3 blinking for 1 second");
+        FillLine(snapshot_.detail2, sizeof(snapshot_.detail2), "Confirm = pass, Down = fail");
         snapshot_.detail3[0] = '\0';
         snapshot_.detail4[0] = '\0';
     }
@@ -764,23 +764,23 @@ void FactoryTestService::FlowTask() {
         }
         if ((bits & kButtonDownClick) != 0) {
             ZectrixSetFactoryLedOverride(false, false);
-            mark_failure_and_wait_poweroff(FactoryTestStep::kLed, "LED 测试失败");
+            mark_failure_and_wait_poweroff(FactoryTestStep::kLed, "LED test failed");
             return;
         }
     }
     ZectrixSetFactoryLedOverride(false, false);
-    set_step_state(FactoryTestStep::kLed, FactoryTestStepState::kPass, "LED 测试通过");
+    set_step_state(FactoryTestStep::kLed, FactoryTestStepState::kPass, "LED test passed");
 
     auto update_key_stage_locked = [this](int key_stage, int failed_stage) {
-        FillLine(snapshot_.detail1, sizeof(snapshot_.detail1), "[%c] 确认键",
+        FillLine(snapshot_.detail1, sizeof(snapshot_.detail1), "[%c] Confirm",
                  failed_stage == 0 ? 'X' : (key_stage > 0 ? 'x' : (key_stage == 0 ? '>' : ' ')));
-        FillLine(snapshot_.detail2, sizeof(snapshot_.detail2), "[%c] 上键",
+        FillLine(snapshot_.detail2, sizeof(snapshot_.detail2), "[%c] Up",
                  failed_stage == 1 ? 'X' : (key_stage > 1 ? 'x' : (key_stage == 1 ? '>' : ' ')));
-        FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "[%c] 下键",
+        FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "[%c] Down",
                  failed_stage == 2 ? 'X' : (key_stage > 2 ? 'x' : (key_stage == 2 ? '>' : ' ')));
     };
 
-    set_step_state(FactoryTestStep::kKeys, FactoryTestStepState::kRunning, "请依次按下：确认 / 上 / 下");
+    set_step_state(FactoryTestStep::kKeys, FactoryTestStepState::kRunning, "Please press in order: Confirm / Up / Down");
     while (true) {
         int key_stage = 0;
         bool restart_key_test = false;
@@ -817,16 +817,16 @@ void FactoryTestService::FlowTask() {
                 snapshot_.step_states[static_cast<size_t>(StepIndex(FactoryTestStep::kKeys))] =
                     FactoryTestStepState::kFail;
                 FillLine(snapshot_.title, sizeof(snapshot_.title), "%s", StepTitle(FactoryTestStep::kKeys));
-                FillLine(snapshot_.hint, sizeof(snapshot_.hint), "按键顺序错误，正在重新开始");
-                FillLine(snapshot_.footer, sizeof(snapshot_.footer), "请重新开始按键测试");
+                FillLine(snapshot_.hint, sizeof(snapshot_.hint), "Wrong key order, restarting");
+                FillLine(snapshot_.footer, sizeof(snapshot_.footer), "Please restart the button test");
                 update_key_stage_locked(key_stage, key_stage);
-                FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "按错键后自动重新开始");
+                FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "Wrong key pressed, restarting automatically");
             }
             PublishSnapshotLocked();
             vTaskDelay(kKeyRetryDelayTicks);
 
             set_step_state(FactoryTestStep::kKeys, FactoryTestStepState::kRunning,
-                           "请依次按下：确认 / 上 / 下");
+                           "Please press in order: Confirm / Up / Down");
             restart_key_test = true;
             break;
         }
@@ -835,9 +835,9 @@ void FactoryTestService::FlowTask() {
         }
         break;
     }
-    set_step_state(FactoryTestStep::kKeys, FactoryTestStepState::kPass, "按键测试通过");
+    set_step_state(FactoryTestStep::kKeys, FactoryTestStepState::kPass, "Button test passed");
 
-    set_step_state(FactoryTestStep::kNfc, FactoryTestStepState::kRunning, "正在写入 NFC 测试链接");
+    set_step_state(FactoryTestStep::kNfc, FactoryTestStepState::kRunning, "Writing NFC test link");
     const std::string nfc_url = "https://www.zectrix.com";
     const std::vector<uint8_t> expected_ndef = BuildUriNdefMessage(nfc_url);
     const std::vector<uint8_t> expected_storage = BuildStoredNdefData(expected_ndef);
@@ -851,7 +851,7 @@ void FactoryTestService::FlowTask() {
     ZectrixNfc* nfc = ZectrixGetNfc();
     if (nfc == nullptr) {
         ESP_LOGE(TAG, "factory_test type=nfc state=enter result=FAIL reason=device_null");
-        mark_failure_and_wait_poweroff(FactoryTestStep::kNfc, "NFC 设备未初始化");
+        mark_failure_and_wait_poweroff(FactoryTestStep::kNfc, "NFC device not initialized");
         return;
     }
 
@@ -903,7 +903,7 @@ void FactoryTestService::FlowTask() {
                      esp_err_to_name(last_write_ret),
                      esp_err_to_name(last_read_ret),
                      esp_err_to_name(last_decode_ret));
-            FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "校验=%s attempt=%d/3",
+            FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "Verify=%s attempt=%d/3",
                      nfc_write_verified ? "PASS" : "FAIL", attempt);
             FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "RAW=%uB NDEF=%uB",
                      static_cast<unsigned>(actual_storage.size()),
@@ -919,7 +919,7 @@ void FactoryTestService::FlowTask() {
 
     if (!nfc_write_verified) {
         ESP_LOGE(TAG, "factory_test type=nfc state=write result=FAIL");
-        mark_failure_and_wait_poweroff(FactoryTestStep::kNfc, "NFC 写入或校验失败");
+        mark_failure_and_wait_poweroff(FactoryTestStep::kNfc, "NFC write or verification failed");
         return;
     }
 
@@ -938,10 +938,10 @@ void FactoryTestService::FlowTask() {
         {
             std::lock_guard<std::mutex> lock(mutex_);
             FillLine(snapshot_.detail1, sizeof(snapshot_.detail1), "URL=%s", nfc_url.c_str());
-            FillLine(snapshot_.detail2, sizeof(snapshot_.detail2), "写入校验=PASS");
-            FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "FD=%d 场=%s idle=%d/3",
+            FillLine(snapshot_.detail2, sizeof(snapshot_.detail2), "Write verify=PASS");
+            FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "FD=%d field=%s idle=%d/3",
                      fd_level, field_present ? "FIELD" : "IDLE", idle_stable_count);
-            FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "请保持手机远离 NFC 天线");
+            FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "Please keep the phone away from the NFC antenna");
         }
         PublishSnapshotLocked();
         idle_stable_count = field_present ? 0 : (idle_stable_count + 1);
@@ -962,16 +962,16 @@ void FactoryTestService::FlowTask() {
         {
             std::lock_guard<std::mutex> lock(mutex_);
             FillLine(snapshot_.detail1, sizeof(snapshot_.detail1), "URL=%s", nfc_url.c_str());
-            FillLine(snapshot_.detail2, sizeof(snapshot_.detail2), "写入校验=PASS");
-            FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "FD=%d 场=%s read=%d/3",
+            FillLine(snapshot_.detail2, sizeof(snapshot_.detail2), "Write verify=PASS");
+            FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "FD=%d field=%s read=%d/3",
                      fd_level, field_present ? "FIELD" : "IDLE", read_stable_count);
-            FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "请用手机靠近并读取 NFC");
+            FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "Please bring the phone close to read the NFC tag");
         }
         PublishSnapshotLocked();
         vTaskDelay(kNfcPollTicks);
     }
     ESP_LOGI(TAG, "factory_test type=nfc state=wait_read result=PASS");
-    set_step_state(FactoryTestStep::kNfc, FactoryTestStepState::kPass, "NFC 测试通过");
+    set_step_state(FactoryTestStep::kNfc, FactoryTestStepState::kPass, "NFC test passed");
 
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -979,12 +979,12 @@ void FactoryTestService::FlowTask() {
         snapshot_.current_state = FactoryTestStepState::kPass;
         snapshot_.terminal_failure = false;
         FillLine(snapshot_.title, sizeof(snapshot_.title), "%s", StepTitle(FactoryTestStep::kComplete));
-        FillLine(snapshot_.hint, sizeof(snapshot_.hint), "所有测试均通过，准备关机");
-        FillLine(snapshot_.detail1, sizeof(snapshot_.detail1), "请拔掉 USB");
+        FillLine(snapshot_.hint, sizeof(snapshot_.hint), "All tests passed, preparing to power off");
+        FillLine(snapshot_.detail1, sizeof(snapshot_.detail1), "Please unplug USB");
         FillLine(snapshot_.detail2, sizeof(snapshot_.detail2), "USB=IN");
-        FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "拔掉后按确认键关机");
+        FillLine(snapshot_.detail3, sizeof(snapshot_.detail3), "After unplugging, press Confirm to power off");
         snapshot_.detail4[0] = '\0';
-        FillLine(snapshot_.footer, sizeof(snapshot_.footer), "全部通过，请拔掉 USB 后按确认");
+        FillLine(snapshot_.footer, sizeof(snapshot_.footer), "All passed, please unplug USB then press Confirm");
     }
     PublishSnapshotLocked();
 
@@ -996,9 +996,9 @@ void FactoryTestService::FlowTask() {
             FillLine(snapshot_.detail2, sizeof(snapshot_.detail2), "USB=%s",
                      usb_removed ? "OUT" : "IN");
             if (usb_removed) {
-                FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "确认键单击后关机");
+                FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "Power off after pressing Confirm");
             } else {
-                FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "请先拔掉 USB");
+                FillLine(snapshot_.detail4, sizeof(snapshot_.detail4), "Please unplug USB first");
             }
         }
         PublishSnapshotLocked();
@@ -1009,8 +1009,8 @@ void FactoryTestService::FlowTask() {
             if (!usb_removed) {
                 {
                     std::lock_guard<std::mutex> lock(mutex_);
-                    FillLine(snapshot_.hint, sizeof(snapshot_.hint), "请先拔掉 USB，再按确认");
-                    FillLine(snapshot_.footer, sizeof(snapshot_.footer), "USB 未拔出，不能关机");
+                    FillLine(snapshot_.hint, sizeof(snapshot_.hint), "Please unplug USB first, then press Confirm");
+                    FillLine(snapshot_.footer, sizeof(snapshot_.footer), "USB still plugged in, cannot power off");
                 }
                 PublishSnapshotLocked();
                 continue;

@@ -16,7 +16,7 @@ static constexpr char kTag[] = "SettingsRenderer";
 
 SettingsRenderer::SettingsRenderer() = default;
 SettingsRenderer::~SettingsRenderer() {
-    // 释放回调内存
+    // Release callback memory
     for (auto* cb : callbacks_) {
         delete cb;
     }
@@ -29,7 +29,7 @@ void SettingsRenderer::Create(lv_obj_t* parent) {
         return;
     }
 
-    // 使用 flex 容器（垂直布局）
+    // Use a flex container (vertical layout)
     container_ = lv_obj_create(parent);
     lv_obj_set_size(container_, LV_PCT(100), LV_PCT(100));
     lv_obj_set_style_bg_color(container_, lv_color_white(), 0);
@@ -38,11 +38,11 @@ void SettingsRenderer::Create(lv_obj_t* parent) {
     lv_obj_set_style_pad_all(container_, 4, 0);
     lv_obj_set_style_pad_row(container_, 4, 0);
 
-    // 垂直 flex 布局
+    // Vertical flex layout
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 
-    // 启用滚动
+    // Enable scrolling
     lv_obj_set_scroll_dir(container_, LV_DIR_VER);
     lv_obj_set_scrollbar_mode(container_, LV_SCROLLBAR_MODE_AUTO);
     lv_obj_set_style_bg_color(container_, lv_color_hex(0x888888), LV_PART_SCROLLBAR);
@@ -58,7 +58,7 @@ void SettingsRenderer::Create(lv_obj_t* parent) {
 void SettingsRenderer::SetItems(const std::vector<SettingsItemDef>& items) {
     if (!lvgl_port_lock(0)) return;
 
-    // 清除旧项和回调
+    // Clear old items and callbacks
     for (auto* cb : callbacks_) {
         delete cb;
     }
@@ -69,7 +69,7 @@ void SettingsRenderer::SetItems(const std::vector<SettingsItemDef>& items) {
     item_buttons_.clear();
     item_data_ = items;
 
-    // 创建新列表项
+    // Create new list items
     for (int i = 0; i < static_cast<int>(items.size()); ++i) {
         lv_obj_t* btn = CreateItem(container_, items[i], i);
         item_buttons_.push_back(btn);
@@ -81,7 +81,7 @@ void SettingsRenderer::SetItems(const std::vector<SettingsItemDef>& items) {
 }
 
 lv_obj_t* SettingsRenderer::CreateItem(lv_obj_t* parent, const SettingsItemDef& def, int index) {
-    // 创建按钮容器
+    // Create the button container
     lv_obj_t* btn = lv_obj_create(parent);
     lv_obj_set_size(btn, LV_PCT(100), 40);
     lv_obj_set_style_radius(btn, 6, 0);
@@ -93,11 +93,11 @@ lv_obj_t* SettingsRenderer::CreateItem(lv_obj_t* parent, const SettingsItemDef& 
     lv_obj_set_style_pad_column(btn, 4, 0);
     lv_obj_add_flag(btn, LV_OBJ_FLAG_CLICKABLE);
 
-    // 水平 flex 布局：icon | label | value
+    // Horizontal flex layout: icon | label | value
     lv_obj_set_flex_flow(btn, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(btn, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    // Icon 标签
+    // Icon label
     lv_obj_t* icon = lv_label_create(btn);
     const char* icon_text = def.icon ? def.icon : FONT_ZECTRIX_ICON_CHECKBOX;
     lv_label_set_text(icon, icon_text);
@@ -105,19 +105,19 @@ lv_obj_t* SettingsRenderer::CreateItem(lv_obj_t* parent, const SettingsItemDef& 
     lv_obj_set_style_text_color(icon, lv_color_black(), 0);
     lv_obj_set_style_pad_right(icon, 6, 0);
 
-    // 如果是 checkbox 类型，使用 checkbox 图标
+    // If it's a checkbox type, use the checkbox icon
     if (def.type == SettingsItemType::Checkbox) {
         lv_label_set_text(icon, GetCheckboxIcon(def.checked));
     }
 
-    // 文本标签
+    // Text label
     lv_obj_t* label = lv_label_create(btn);
     lv_label_set_text(label, def.label.c_str());
     lv_obj_set_style_text_font(label, &SourceHanSansSC_Regular_slim, 0);
     lv_obj_set_style_text_color(label, lv_color_black(), 0);
-    lv_obj_set_flex_grow(label, 1);  // 占据剩余空间
+    lv_obj_set_flex_grow(label, 1);  // Take up remaining space
 
-    // 值标签（右侧）
+    // Value label (right side)
     if (!def.value.empty()) {
         lv_obj_t* value_label = lv_label_create(btn);
         lv_label_set_text(value_label, def.value.c_str());
@@ -126,7 +126,7 @@ lv_obj_t* SettingsRenderer::CreateItem(lv_obj_t* parent, const SettingsItemDef& 
         lv_obj_set_style_pad_right(value_label, 4, 0);
     }
 
-    // 箭头（仅 Normal 和 Action 类型）
+    // Arrow (Normal and Action types only)
     if (def.type != SettingsItemType::Checkbox) {
         lv_obj_t* arrow = lv_label_create(btn);
         lv_label_set_text(arrow, ">");
@@ -134,7 +134,7 @@ lv_obj_t* SettingsRenderer::CreateItem(lv_obj_t* parent, const SettingsItemDef& 
         lv_obj_set_style_text_color(arrow, lv_color_hex(0x999999), 0);
     }
 
-    // 设置点击回调
+    // Set the click callback
     if (def.on_click) {
         auto* callback_ptr = new std::function<void()>(def.on_click);
         callbacks_.push_back(callback_ptr);
@@ -157,12 +157,12 @@ void SettingsRenderer::UpdateItem(int index, const std::string& value) {
     item_data_[index].value = value;
 
     lv_obj_t* btn = item_buttons_[index];
-    // 查找值标签（第三个子控件：icon=0, label=1, value=2）
+    // Find the value label (third child control: icon=0, label=1, value=2)
     lv_obj_t* value_label = lv_obj_get_child(btn, 2);
     if (value_label && lv_obj_check_type(value_label, &lv_label_class)) {
         lv_label_set_text(value_label, value.c_str());
     } else if (!value.empty()) {
-        // 创建新的值标签
+        // Create a new value label
         value_label = lv_label_create(btn);
         lv_label_set_text(value_label, value.c_str());
         lv_obj_set_style_text_font(value_label, &SourceHanSansSC_Regular_slim, 0);
@@ -181,7 +181,7 @@ void SettingsRenderer::UpdateChecked(int index, bool checked) {
     item_data_[index].checked = checked;
 
     lv_obj_t* btn = item_buttons_[index];
-    // 更新 checkbox 图标（第一个子控件）
+    // Update the checkbox icon (first child control)
     lv_obj_t* icon = lv_obj_get_child(btn, 0);
     if (icon && lv_obj_check_type(icon, &lv_label_class)) {
         lv_label_set_text(icon, GetCheckboxIcon(checked));

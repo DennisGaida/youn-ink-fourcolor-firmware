@@ -6,30 +6,30 @@
 
 namespace ui {
 
-// 天气数据结构
+// Weather data structure
 struct WeatherData {
-    std::string city;           // 城市
-    std::string temp;           // 温度
-    std::string condition;      // 天气状况
-    std::string humidity;       // 湿度
-    std::string wind;           // 风速风向
-    std::string update_time;    // 更新时间
+    std::string city;           // City
+    std::string temp;           // Temperature
+    std::string condition;      // Weather condition
+    std::string humidity;       // Humidity
+    std::string wind;           // Wind speed/direction
+    std::string update_time;    // Update time
 };
 
-// 天气看板页 - Grid 布局
+// Weather dashboard page - Grid layout
 class WeatherPage {
 public:
     WeatherPage(lv_obj_t* parent);
     ~WeatherPage();
 
-    // 更新天气数据
+    // Update weather data
     void UpdateWeather(const WeatherData& data);
 
-    // 刷新显示
+    // Refresh display
     void Refresh();
 
 private:
-    lv_obj_t* container_ = nullptr;   // Grid 容器
+    lv_obj_t* container_ = nullptr;   // Grid container
     lv_obj_t* city_label_ = nullptr;
     lv_obj_t* temp_label_ = nullptr;
     lv_obj_t* condition_label_ = nullptr;
@@ -37,7 +37,7 @@ private:
     lv_obj_t* wind_label_ = nullptr;
     lv_obj_t* time_label_ = nullptr;
 
-    // 初始化 Grid 布局
+    // Initialize the Grid layout
     void SetupGrid();
 };
 

@@ -8,25 +8,25 @@ namespace ui {
 constexpr char kTag[] = "LogPage";
 
 LogPage::LogPage(lv_obj_t* parent) {
-    // 创建容器
+    // Create container
     container_ = lv_obj_create(parent);
     lv_obj_set_size(container_, LV_PCT(100), LV_PCT(100));
     lv_obj_set_style_bg_color(container_, lv_color_white(), 0);
     lv_obj_set_style_border_width(container_, 0, 0);
     lv_obj_set_style_pad_all(container_, 8, 0);
 
-    // 创建日志文本标签（多行滚动）
+    // Create log text label (multi-line, scrollable)
     log_label_ = lv_label_create(container_);
     lv_obj_set_size(log_label_, LV_PCT(100), LV_PCT(100));
     lv_obj_set_style_text_font(log_label_, &SourceHanSansSC_Regular_slim, 0);
     lv_label_set_long_mode(log_label_, LV_LABEL_LONG_WRAP);
-    lv_label_set_text(log_label_, "系统日志\n等待初始化...");
+    lv_label_set_text(log_label_, "System Log\nWaiting for initialization...");
 
     ESP_LOGI(kTag, "Log page created");
 }
 
 LogPage::~LogPage() {
-    // 子控件随容器删除
+    // Child widgets are deleted along with the container
 }
 
 void LogPage::Clear() {
@@ -35,7 +35,7 @@ void LogPage::Clear() {
 }
 
 void LogPage::AddEntry(const std::string& text, int level) {
-    // 添加日志前缀
+    // Add log prefix
     const char* prefix = "";
     switch (level) {
         case 1: prefix = "[WARN] "; break;
@@ -45,7 +45,7 @@ void LogPage::AddEntry(const std::string& text, int level) {
 
     entries_.push_back(prefix + text);
 
-    // 更新显示
+    // Update display
     std::string full_text;
     for (const std::string& entry : entries_) {
         full_text += entry + "\n";
@@ -61,7 +61,7 @@ void LogPage::SetEntries(const std::vector<LogEntry>& entries) {
 }
 
 void LogPage::Refresh() {
-    // LVGL 自动刷新
+    // LVGL refreshes automatically
 }
 
 }  // namespace ui

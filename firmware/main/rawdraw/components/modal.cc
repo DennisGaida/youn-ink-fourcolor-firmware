@@ -4,7 +4,7 @@
  */
 
 #include "modal.h"
-#include "rawdraw/layout_utils.h"  // FIX: 使用 InkCenteredTextTopYInBox 替代私有函数
+#include "rawdraw/layout_utils.h"  // FIX: use InkCenteredTextTopYInBox instead of the private function
 #include "rawdraw/theme.h"
 
 #include <algorithm>
@@ -12,9 +12,10 @@
 namespace rawdraw {
 namespace {
 
-// ⚠️ DEPRECATED: 此函数用 line_height 居中，对中文紧凑控件文字偏上。
-// 应改用 layout_utils.h 的 InkCenteredTextTopYInBox。
-// 参见 wiki/projects/notellm-baseline-alignment.md
+// ⚠️ DEPRECATED: this function centers using line_height, which pushes text too high
+// in compact Chinese-text widgets.
+// Use InkCenteredTextTopYInBox from layout_utils.h instead.
+// See wiki/projects/notellm-baseline-alignment.md
 //
 // int CalcBaselineY(const lv_font_t* font, int top, int height) {
 //     if (!font) {
@@ -117,8 +118,8 @@ void Modal::Draw(uint8_t* fb, int width, int height) const {
         const Rect title_bounds = GetTitleBounds();
         DrawStyledRoundRect(fb, width, height, title_bounds, radius_, modal_style);
         DrawHLine(fb, width, title_bounds.y + title_bounds.h - 1, title_bounds.x, title_bounds.x + title_bounds.w - 1, modal_style.border);
-        // FIX: 改用 InkCenteredTextTopYInBox，避免 line_height 居中导致中文偏上
-        // 参见 wiki/projects/notellm-baseline-alignment.md
+        // FIX: use InkCenteredTextTopYInBox instead, to avoid line_height centering pushing Chinese text too high
+        // See wiki/projects/notellm-baseline-alignment.md
         const int text_y = InkCenteredTextTopYInBox(title_font_, title_, title_bounds.y, title_bounds.h, 0);
         const int text_w = MeasureTextWidth(title_, title_font_);
         const int text_x = title_bounds.x + std::max(0, (title_bounds.w - text_w) / 2);
@@ -128,8 +129,8 @@ void Modal::Draw(uint8_t* fb, int width, int height) const {
     if (footer_ && footer_[0] != '\0') {
         const Rect footer_bounds = GetFooterBounds();
         DrawHLine(fb, width, footer_bounds.y, footer_bounds.x, footer_bounds.x + footer_bounds.w - 1, modal_style.border);
-        // FIX: 改用 InkCenteredTextTopYInBox，避免 line_height 居中导致中文偏上
-        // 参见 wiki/projects/notellm-baseline-alignment.md
+        // FIX: use InkCenteredTextTopYInBox instead, to avoid line_height centering pushing Chinese text too high
+        // See wiki/projects/notellm-baseline-alignment.md
         const int text_y = InkCenteredTextTopYInBox(title_font_, footer_, footer_bounds.y, footer_bounds.h, 0);
         const int text_w = MeasureTextWidth(footer_, title_font_);
         const int text_x = footer_bounds.x + std::max(0, (footer_bounds.w - text_w) / 2);

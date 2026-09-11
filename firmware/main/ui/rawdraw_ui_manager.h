@@ -84,16 +84,16 @@ enum class RawDrawPageId {
  */
 struct RawDrawStatusBarData {
     std::string page_title;
-    std::string central_text;  // Overrides page_title when non-empty (e.g. "录音中...", "file.txt 1/3")
+    std::string central_text;  // Overrides page_title when non-empty (e.g. "Recording...", "file.txt 1/3")
     bool wifi_connected = false;
     bool server_connected = false;
     bool bluetooth_enabled = false;
     int battery_level = -1;       // -1 = unknown
     bool battery_charging = false;
     bool battery_vertical = false;
-    std::string date_format;      // "" = default (M月D日), "iso" = yyyy-mm-dd, "hidden" = hide date
+    std::string date_format;      // "" = default (Chinese "M月D日" format), "iso" = yyyy-mm-dd, "hidden" = hide date
     std::string server_date;      // date from WSS (yyyy-mm-dd), fallback for RTC
-    std::string server_weekday;   // weekday from WSS (周一~周日)
+    std::string server_weekday;   // weekday from WSS (Monday to Sunday, in Chinese)
 };
 
 /**

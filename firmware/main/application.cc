@@ -486,7 +486,7 @@ void Application::ArmSyncSleepTimer() {
     Settings nvs(kSyncNamespace, false);
     const int interval_minutes = nvs.GetInt(kSyncIntervalKey, 30);
     if (interval_minutes <= 0) {
-        ESP_LOGI(kTag, "Sync sleep interval: 关闭");
+        ESP_LOGI(kTag, "Sync sleep interval: off");
         return;
     }
     if (sleep_timer_ == nullptr) {

@@ -42,14 +42,14 @@ class Camera;
 class NetworkInterface;
 class Board {
 private:
-    Board(const Board&) = delete; // 禁用拷贝构造函数
-    Board& operator=(const Board&) = delete; // 禁用赋值操作
+    Board(const Board&) = delete; // disable copy constructor
+    Board& operator=(const Board&) = delete; // disable assignment operator
 
 protected:
     Board();
     std::string GenerateUuid();
 
-    // 软件生成的设备唯一标识
+    // Software-generated device unique identifier
     std::string uuid_;
     std::string device_key_;
 

@@ -19,24 +19,24 @@ void UiManager::Init(lv_display_t* display) {
     // Set this display as default so lv_screen_active() works
     lv_display_set_default(display);
 
-    // 创建主屏幕
+    // Create the main screen
     lv_obj_t* scr = lv_screen_active();
 
-    // 创建状态栏（固定在顶部）
+    // Create the status bar (fixed at the top)
     status_bar_ = std::make_unique<StatusBar>(scr);
 
-    // 创建 TabView 容器（在状态栏下方）
+    // Create the TabView container (below the status bar)
     tabview_ = lv_tabview_create(scr);
-    lv_tabview_set_tab_bar_position(tabview_, LV_DIR_NONE);  // 隐藏 Tab 按钮，用物理按键切换
+    lv_tabview_set_tab_bar_position(tabview_, LV_DIR_NONE);  // Hide tab buttons; switch via physical keys
     lv_obj_set_size(tabview_, LV_PCT(100), 300 - StatusBar::GetHeight());
     lv_obj_set_pos(tabview_, 0, StatusBar::GetHeight());
 
-    // 创建各个页面
+    // Create each page
     CreatePages();
 
-    // 初始化状态栏显示当前页面标题
+    // Initialize the status bar to show the current page title
     StatusBarData init_data;
-    init_data.page_title = "对话";
+    init_data.page_title = "Chat";
     init_data.wifi_connected = false;
     init_data.server_connected = false;
     init_data.battery_level = -1;
@@ -53,15 +53,15 @@ void UiManager::Init(lv_display_t* display) {
 }
 
 void UiManager::CreatePages() {
-    // 7 个页面（按 spec_v2 顺序）
+    // 7 pages (in spec_v2 order)
     const char* page_names[] = {
-        "Chat",    // 0 - 对话
+        "Chat",    // 0 - Chat
         "Todo",    // 1 - Todo
-        "Log",     // 2 - 日志
-        "LifeBar", // 3 - 人生进度
-        "Almanac", // 4 - 老黄历
-        "Weather", // 5 - 天气
-        "Settings" // 6 - 设置
+        "Log",     // 2 - Log
+        "LifeBar", // 3 - Life progress
+        "Almanac", // 4 - Almanac
+        "Weather", // 5 - Weather
+        "Settings" // 6 - Settings
     };
 
     for (int i = 0; i < 7; ++i) {
@@ -69,7 +69,7 @@ void UiManager::CreatePages() {
         lv_obj_set_style_bg_color(tabs_[i], lv_color_white(), 0);
     }
 
-    // 创建页面实例
+    // Create page instances
     chat_page_ = std::make_unique<ChatPage>(tabs_[0]);
     todo_page_ = std::make_unique<TodoPage>(tabs_[1]);
     log_page_ = std::make_unique<LogPage>(tabs_[2]);
@@ -84,49 +84,49 @@ void UiManager::SwitchPage(PageId page) {
 
     int index = static_cast<int>(page);
 
-    // 【Spec v3 §5】清屏机制：切换页面前先清除内容区域，防止残影
-    // 保留状态栏（Y: 0-30），清除内容区（Y: 30-300）
+    // [Spec v3 §5] Screen-clear mechanism: clear the content area before switching pages to prevent ghosting
+    // Preserve the status bar (Y: 0-30), clear the content area (Y: 30-300)
     ClearContentArea();
 
-    // 切换到新页面
+    // Switch to the new page
     lv_tabview_set_active(tabview_, index, LV_ANIM_OFF);
     current_page_ = page;
 
-    // 更新状态栏中的页面标题
+    // Update the page title in the status bar
     const char* titles[] = {
-        "对话",     // 0
+        "Chat",     // 0
         "Todo",     // 1
-        "日志",     // 2
-        "人生进度", // 3
-        "老黄历",   // 4
-        "天气",     // 5
-        "设置"      // 6
+        "Log",      // 2
+        "Life Progress", // 3
+        "Almanac",  // 4
+        "Weather",  // 5
+        "Settings"  // 6
     };
     StatusBarData data;
     data.page_title = titles[index];
     UpdateStatusBar(data);
 
-    // 墨水屏：立即刷新显示切换
+    // E-paper: refresh immediately to show the switch
     RefreshNow();
 
-    // 强制全局刷新清除残影（spec_v2 §5）
+    // Force a full refresh to clear ghosting (spec_v2 §5)
     RequestFullRefresh();
 
     ESP_LOGI(kTag, "Switched to page %d (%s)", index, titles[index]);
 }
 
 void UiManager::ClearContentArea() {
-    // 清除内容区域（保留顶部状态栏）
-    // 使用 LVGL 的 invalidate + fill 方式清除
+    // Clear the content area (preserve the status bar at the top)
+    // Clear using LVGL's invalidate + fill approach
     lv_obj_t* scr = lv_screen_active();
     if (!scr) return;
 
-    // 在 TabView 区域绘制白色矩形来清除内容
-    // TabView 位置：Y 从 StatusBar::GetHeight() (30) 开始
+    // Draw a white rectangle over the TabView area to clear the content
+    // TabView position: Y starts at StatusBar::GetHeight() (30)
     int content_y = StatusBar::GetHeight();
     int content_height = 300 - content_y;
 
-    // 创建一个临时白色覆盖层清除内容
+    // Create a temporary white overlay layer to clear the content
     lv_obj_t* clear_layer = lv_obj_create(scr);
     lv_obj_set_pos(clear_layer, 0, content_y);
     lv_obj_set_size(clear_layer, 400, content_height);
@@ -135,10 +135,10 @@ void UiManager::ClearContentArea() {
     lv_obj_set_style_border_width(clear_layer, 0, 0);
     lv_obj_set_style_radius(clear_layer, 0, 0);
 
-    // 立即刷新这个清除层
+    // Immediately refresh this clear layer
     lv_refr_now(display_);
 
-    // 删除清除层
+    // Delete the clear layer
     lv_obj_delete(clear_layer);
 
     ESP_LOGI(kTag, "Content area cleared (Y: %d-%d)", content_y, content_y + content_height);
@@ -155,12 +155,12 @@ lv_obj_t* UiManager::GetPage(PageId page) const {
 void UiManager::RefreshNow() {
     if (!display_) return;
 
-    // LVGL 静态刷新：强制立即渲染
+    // LVGL static refresh: force immediate rendering
     lv_refr_now(display_);
 
     refresh_count_++;
 
-    // 每 10 次部分刷新后，触发一次全局刷新清除残影
+    // After every 10 partial refreshes, trigger a full refresh to clear ghosting
     if (refresh_count_ >= 10) {
         full_refresh_pending_ = true;
         refresh_count_ = 0;

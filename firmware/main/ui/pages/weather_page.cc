@@ -1,7 +1,7 @@
 #include "weather_page.h"
 #include <esp_log.h>
 
-// 外部字体声明（支持中文）
+// External font declaration (supports Chinese characters)
 extern const lv_font_t SourceHanSansSC_Regular_slim;
 extern const lv_font_t weather_icons_48;
 
@@ -10,7 +10,7 @@ namespace ui {
 constexpr char kTag[] = "WeatherPage";
 
 WeatherPage::WeatherPage(lv_obj_t* parent) {
-    // 创建 Grid 容器
+    // Create Grid container
     container_ = lv_obj_create(parent);
     lv_obj_set_size(container_, LV_PCT(100), LV_PCT(100));
     lv_obj_set_style_bg_color(container_, lv_color_white(), 0);
@@ -22,44 +22,44 @@ WeatherPage::WeatherPage(lv_obj_t* parent) {
 }
 
 WeatherPage::~WeatherPage() {
-    // 子控件会随 container 删除而删除
+    // Child widgets are deleted along with the container
 }
 
 void WeatherPage::SetupGrid() {
-    // Grid 布局：4 列 3 行
+    // Grid layout: 4 columns, 3 rows
     static lv_coord_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
     static lv_coord_t row_dsc[] = {LV_GRID_CONTENT, LV_GRID_CONTENT, LV_GRID_CONTENT, LV_GRID_TEMPLATE_LAST};
 
     lv_obj_set_grid_dsc_array(container_, col_dsc, row_dsc);
 
-    // 城市名（第 0 行，占 4 列）
+    // City name (row 0, spans 4 columns)
     city_label_ = lv_label_create(container_);
-    lv_label_set_text(city_label_, "北京");
+    lv_label_set_text(city_label_, "Beijing");
     lv_obj_set_grid_cell(city_label_, LV_GRID_ALIGN_CENTER, 0, 4, LV_GRID_ALIGN_CENTER, 0, 1);
 
-    // 温度（第 1 行，占 2 列）
+    // Temperature (row 1, spans 2 columns)
     temp_label_ = lv_label_create(container_);
     lv_label_set_text(temp_label_, "25°C");
     lv_obj_set_grid_cell(temp_label_, LV_GRID_ALIGN_START, 0, 2, LV_GRID_ALIGN_CENTER, 1, 1);
 
-    // 天气状况（第 1 行，占 2 列）
+    // Weather condition (row 1, spans 2 columns)
     condition_label_ = lv_label_create(container_);
-    lv_label_set_text(condition_label_, "晴");
+    lv_label_set_text(condition_label_, "Sunny");
     lv_obj_set_grid_cell(condition_label_, LV_GRID_ALIGN_END, 2, 2, LV_GRID_ALIGN_CENTER, 1, 1);
 
-    // 湿度（第 2 行，占 2 列）
+    // Humidity (row 2, spans 2 columns)
     humidity_label_ = lv_label_create(container_);
-    lv_label_set_text(humidity_label_, "湿度: 45%");
+    lv_label_set_text(humidity_label_, "Humidity: 45%");
     lv_obj_set_grid_cell(humidity_label_, LV_GRID_ALIGN_START, 0, 2, LV_GRID_ALIGN_CENTER, 2, 1);
 
-    // 风速（第 2 行，占 2 列）
+    // Wind speed (row 2, spans 2 columns)
     wind_label_ = lv_label_create(container_);
-    lv_label_set_text(wind_label_, "风速: 3m/s");
+    lv_label_set_text(wind_label_, "Wind: 3m/s");
     lv_obj_set_grid_cell(wind_label_, LV_GRID_ALIGN_END, 2, 2, LV_GRID_ALIGN_CENTER, 2, 1);
 
-    // 更新时间（底部）
+    // Update time (bottom)
     time_label_ = lv_label_create(container_);
-    lv_label_set_text(time_label_, "更新时间: --:--");
+    lv_label_set_text(time_label_, "Updated: --:--");
     lv_obj_set_grid_cell(time_label_, LV_GRID_ALIGN_CENTER, 0, 4, LV_GRID_ALIGN_END, 2, 1);
 }
 
@@ -73,7 +73,7 @@ void WeatherPage::UpdateWeather(const WeatherData& data) {
 }
 
 void WeatherPage::Refresh() {
-    // LVGL 会自动处理刷新
+    // LVGL handles the refresh automatically
 }
 
 }  // namespace ui

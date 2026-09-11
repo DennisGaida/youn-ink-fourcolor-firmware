@@ -285,20 +285,20 @@ CustomLcdDisplay::~CustomLcdDisplay() {
         vSemaphoreDelete(dirty_mutex);
         dirty_mutex = nullptr;
     }
-    // 如需释放 buffer/prev_buffer/tx_buf 可在此处补充
+    // Add buffer/prev_buffer/tx_buf release here if needed
 }
 
 // =======================================================
 // Async refresh task
 // =======================================================
 
-// 差异分析结果
+// Frame diff analysis result
 struct FrameDiffResult {
-    size_t diff_bits;                // 差异bit总数
-    float diff_ratio;                // 差异比例 (diff_bits / total_bits)
+    size_t diff_bits;                // total number of differing bits
+    float diff_ratio;                // diff ratio (diff_bits / total_bits)
 };
 
-// 统一的差异分析函数（仅统计差异字节比例）
+// Unified diff analysis function (only counts the differing byte ratio)
 static FrameDiffResult analyze_frame_diff(
     const uint8_t* prev_buffer,
     const uint8_t* tx_buf,
@@ -319,7 +319,7 @@ static FrameDiffResult analyze_frame_diff(
     const size_t total_bytes = bytes_per_row * height;
     const size_t total_bits = total_bytes * 8;
 
-    // 逐行扫描，统计差异bit数
+    // Scan row by row, counting the differing bits
     for (int y = 0; y < height; ++y) {
         const uint8_t* prow = prev_buffer + y * bytes_per_row;
         const uint8_t* crow = tx_buf + y * bytes_per_row;
@@ -515,7 +515,7 @@ void CustomLcdDisplay::refresh_task_loop() {
         (void)CheckRefreshIdleLocked();
         xSemaphoreGive(dirty_mutex);
 
-        // 周期性采样：按 last_sample_tick 计时，非刷新结束时间
+        // Periodic sampling: timed from last_sample_tick, not from refresh end time
         TickType_t min_ticks = pdMS_TO_TICKS(sample_interval_ms);
         if (!urgent) {
             TickType_t elapsed = (last_sample_tick == 0) ? min_ticks : (now - last_sample_tick);
@@ -551,10 +551,10 @@ void CustomLcdDisplay::refresh_task_loop() {
         xSemaphoreGive(dirty_mutex);
         last_sample_tick = xTaskGetTickCount();
 
-        // 统一差异分析：仅统计差异比例
+        // Unified diff analysis: only counts the diff ratio
         FrameDiffResult result = analyze_frame_diff(prev_buffer, tx_buf, Width, Height);
 
-        // 快速退出：没有任何变化
+        // Fast exit: nothing changed
         if (result.diff_bits == 0 && !force_full) {
             tiny_diff_streak = 0;
             tiny_diff_accum_bits = 0;
@@ -575,8 +575,10 @@ void CustomLcdDisplay::refresh_task_loop() {
             continue;
         }
 
-        // 可选：过滤超小差异（防止抗锯齿/边界振荡导致的无意义刷新）
-        // 注意：不立即同步 prev_buffer，避免累计误差；达到阈值后再强制刷新
+        // Optional: filter out tiny diffs (avoids pointless refreshes caused by
+        // anti-aliasing / edge jitter)
+        // Note: don't sync prev_buffer immediately, to avoid accumulated error;
+        // force a refresh once the threshold is reached
         if (!urgent && !force_full && result.diff_ratio < kMinDiffBitRatio) {
             if (tiny_diff_streak == 0) {
                 tiny_diff_first_tick = last_sample_tick;
@@ -799,8 +801,8 @@ uint8_t CustomLcdDisplay::SPI_RecvByte() {
 
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));
-    t.length    = 8;        // 接收 8 bit
-    t.rx_buffer = &rx;     // 只接收，不发送
+    t.length    = 8;        // receive 8 bits
+    t.rx_buffer = &rx;     // receive only, no transmit
 
     esp_err_t ret = spi_device_polling_transmit(spi, &t);
     assert(ret == ESP_OK);
@@ -996,7 +998,8 @@ void CustomLcdDisplay::EPD_Display() {
     const int bytes_per_row_1bpp = (Width + 7) >> 3;       // 400 -> 50
     const int bytes_per_row_2bpp = (Width * 2 + 7) >> 3;    // 400 -> 100
 
-    // 行缓冲：四彩屏直接发送 2bpp 数据，黑白屏保留原有 1bpp->2683 转换
+    // Line buffer: 4-color panel sends 2bpp data directly, B/W panel keeps the
+    // original 1bpp->2683 conversion
     std::vector<uint8_t> line(IsFourColorPanel() ? bytes_per_row_2bpp : bytes_per_row_1bpp * 2);
 
     if (IsFourColorPanel()) {
@@ -1065,7 +1068,7 @@ void CustomLcdDisplay::EPD_Display() {
             *dst++ = o1;
         }
 
-        // 一行一发：只做一次 SPI transaction
+        // Send one row at a time: only a single SPI transaction
         writeBytes(line.data(), bytes_per_row_1bpp * 2);
         if (IsFourColorPanel() && (y % 16) == 15) {
             vTaskDelay(1);
@@ -1136,8 +1139,8 @@ void bitInterleave(unsigned char bytes1, unsigned char bytes2) {
 #endif
 
 #if 0
-    //  prev_buffer / tx_buffer 是整屏 1bpp buffer，行优先：Height * bytes_per_row_1bpp
-    // prev_buffer 对应旧图，tx_buffer 对应新图
+    //  prev_buffer / tx_buffer are full-screen 1bpp buffers, row-major: Height * bytes_per_row_1bpp
+    // prev_buffer holds the old image, tx_buffer holds the new image
     for (int i = 0; i < Height; i++) {
         const uint8_t* prev_row = prev_buffer + i * bytes_per_row_1bpp;
         const uint8_t* tx_row   = tx_buf   + i * bytes_per_row_1bpp;
@@ -1146,11 +1149,11 @@ void bitInterleave(unsigned char bytes1, unsigned char bytes2) {
             uint8_t b1 = prev_row[j];
             uint8_t b2 = tx_row[j];
 
-            // 等价 bitInterleave(b1, b2) 的 16-bit result（先发高字节再发低字节）
+            // Equivalent to bitInterleave(b1, b2)'s 16-bit result (high byte sent first, then low byte)
             uint16_t result = 0;
             for (int k = 0; k < 8; k++) {
-                // 原代码：((bytes1 >> (7-k)) & 1) << (2*(7-k)+1)
-                //         ((bytes2 >> (7-k)) & 1) << (2*(7-k))
+                // Original code: ((bytes1 >> (7-k)) & 1) << (2*(7-k)+1)
+                //                ((bytes2 >> (7-k)) & 1) << (2*(7-k))
                 const int src_bit = 7 - k;
                 const int dst_bit0 = 2 * src_bit;     // even: bytes2
                 const int dst_bit1 = 2 * src_bit + 1; // odd : bytes1
@@ -1159,12 +1162,12 @@ void bitInterleave(unsigned char bytes1, unsigned char bytes2) {
                 result |= ((uint16_t)((b2 >> src_bit) & 1u)) << dst_bit0;
             }
 
-            // bitInterleave 在 i==3 时写高字节，在 i==7 时写低字节 -> 高字节先发
+            // bitInterleave writes the high byte at i==3 and the low byte at i==7 -> high byte sent first
             line[2 * j + 0] = (uint8_t)(result >> 8);
             line[2 * j + 1] = (uint8_t)(result & 0xFF);
         }
 
-        // 一行一发：只做一次 SPI transaction
+        // Send one row at a time: only a single SPI transaction
         writeBytes(line.data(), bytes_per_row_out);
     }
 #endif
@@ -1298,8 +1301,8 @@ void CustomLcdDisplay::EPD_DisplayPart() {
     EPD_SendCommand(0x10);
     read_busy();
 
-    //  prev_buffer / tx_buffer 是整屏 1bpp buffer，行优先：Height * bytes_per_row_1bpp
-    // prev_buffer 对应旧图，tx_buffer 对应新图
+    //  prev_buffer / tx_buffer are full-screen 1bpp buffers, row-major: Height * bytes_per_row_1bpp
+    // prev_buffer holds the old image, tx_buffer holds the new image
     for (int i = 0; i < Height; i++) {
         const uint8_t* prev_row = prev_buffer + i * bytes_per_row_2bpp;
         const uint8_t* tx_row   = tx_buf   + i * bytes_per_row_2bpp;
@@ -1308,11 +1311,11 @@ void CustomLcdDisplay::EPD_DisplayPart() {
             uint8_t b1 = Pack2bppRowTo1bppByte(prev_row, j * 8);
             uint8_t b2 = Pack2bppRowTo1bppByte(tx_row, j * 8);
 
-            // 等价 bitInterleave(b1, b2) 的 16-bit result（先发高字节再发低字节）
+            // Equivalent to bitInterleave(b1, b2)'s 16-bit result (high byte sent first, then low byte)
             uint16_t result = 0;
             for (int k = 0; k < 8; k++) {
-                // 原代码：((bytes1 >> (7-k)) & 1) << (2*(7-k)+1)
-                //         ((bytes2 >> (7-k)) & 1) << (2*(7-k))
+                // Original code: ((bytes1 >> (7-k)) & 1) << (2*(7-k)+1)
+                //                ((bytes2 >> (7-k)) & 1) << (2*(7-k))
                 const int src_bit = 7 - k;
                 const int dst_bit0 = 2 * src_bit;     // even: bytes2
                 const int dst_bit1 = 2 * src_bit + 1; // odd : bytes1
@@ -1321,12 +1324,12 @@ void CustomLcdDisplay::EPD_DisplayPart() {
                 result |= ((uint16_t)((b2 >> src_bit) & 1u)) << dst_bit0;
             }
 
-            // bitInterleave 在 i==3 时写高字节，在 i==7 时写低字节 -> 高字节先发
+            // bitInterleave writes the high byte at i==3 and the low byte at i==7 -> high byte sent first
             line[2 * j + 0] = (uint8_t)(result >> 8);
             line[2 * j + 1] = (uint8_t)(result & 0xFF);
         }
 
-        // 一行一发：只做一次 SPI transaction
+        // Send one row at a time: only a single SPI transaction
         writeBytes(line.data(), bytes_per_row_out);
         if (IsFourColorPanel() && (i % 16) == 15) {
             vTaskDelay(1);
@@ -1350,9 +1353,9 @@ void CustomLcdDisplay::EPD_DrawColorPixel(uint16_t x, uint16_t y, uint8_t color)
 }
 
 // =======================================================
-// 写入原始 1bpp 位图到帧缓冲区
-// 输入格式: bit=1 表示黑色, bit=0 表示白色
-// 帧缓冲格式: bit=1 表示白色, bit=0 表示黑色（需翻转）
+// Write a raw 1bpp bitmap into the framebuffer
+// Input format: bit=1 means black, bit=0 means white
+// Framebuffer format: bit=1 means white, bit=0 means black (needs inverting)
 // =======================================================
 void CustomLcdDisplay::WriteRaw1bpp(int x, int y, int w, int h, const uint8_t* data, size_t len) {
     if (!data || !buffer || w <= 0 || h <= 0) return;
@@ -1373,13 +1376,13 @@ void CustomLcdDisplay::WriteRaw1bpp(int x, int y, int w, int h, const uint8_t* d
         for (int col = 0; col < w; col++) {
             int dx = x + col;
             if (dx < 0 || dx >= Width) continue;
-            // 读取源 bit（1=黑）
+            // Read the source bit (1=black)
             bool black = (src_row[col >> 3] >> (7 - (col & 7))) & 1;
             rawdraw::set_pixel(buffer, Width, dx, dy, black ? rawdraw::BLACK : rawdraw::WHITE);
         }
     }
 
-    // 标记脏区域并触发刷新
+    // Mark the dirty region and trigger a refresh
     Rect r = clamp_rect(align_x8({x, y, w, h}), Width, Height);
     if (rect_area(r) > 0) {
         dirty = rect_union(dirty, r);
@@ -1396,7 +1399,7 @@ void CustomLcdDisplay::WriteRaw1bpp(int x, int y, int w, int h, const uint8_t* d
     ESP_LOGI(TAG, "WriteRaw1bpp: region x=%d y=%d w=%d h=%d, %u bytes", x, y, w, h, (unsigned)len);
 }
 
-// 对帧缓冲区的指定区域进行反色（XOR 操作）
+// Invert colors (XOR operation) for the given region of the framebuffer
 void CustomLcdDisplay::InvertRegion(int x, int y, int w, int h) {
     if (!buffer || w <= 0 || h <= 0) return;
 
@@ -1414,7 +1417,7 @@ void CustomLcdDisplay::InvertRegion(int x, int y, int w, int h) {
         }
     }
 
-    // 标记脏区域并触发刷新
+    // Mark the dirty region and trigger a refresh
     Rect r = clamp_rect(align_x8({x, y, w, h}), Width, Height);
     if (rect_area(r) > 0) {
         dirty = rect_union(dirty, r);
@@ -1431,10 +1434,10 @@ void CustomLcdDisplay::InvertRegion(int x, int y, int w, int h) {
     ESP_LOGI(TAG, "InvertRegion: region x=%d y=%d w=%d h=%d", x, y, w, h);
 }
 
-// utf8_next() 已在 rawdraw/font_engine.h 中定义，此处不重复定义
+// utf8_next() is already defined in rawdraw/font_engine.h, not redefined here
 
 // =======================================================
-// 文本渲染：用 LVGL 字体 API 逐字符写入 1bpp 帧缓冲
+// Text rendering: write character-by-character into the 1bpp framebuffer using the LVGL font API
 // =======================================================
 void CustomLcdDisplay::render_text_to_buffer(const char* text, int start_x, int start_y, const lv_font_t* font) {
     int cursor_x = start_x;
@@ -1445,21 +1448,21 @@ void CustomLcdDisplay::render_text_to_buffer(const char* text, int start_x, int 
         uint32_t ch = utf8_next(&p);
         if (ch == 0) break;
 
-        // 换行
+        // Line break
         if (ch == '\n') {
             cursor_x = start_x;
             cursor_y += font->line_height;
             continue;
         }
 
-        // 获取字形描述
+        // Get the glyph descriptor
         lv_font_glyph_dsc_t g = {};
         if (!lv_font_get_glyph_dsc(font, &g, ch, 0)) {
-            cursor_x += font->line_height / 2;  // 未知字符跳过半宽
+            cursor_x += font->line_height / 2;  // unknown character: skip half width
             continue;
         }
 
-        // 获取字形位图（绕过 static_bitmap 检查，直接取 raw bitmap）
+        // Get the glyph bitmap (bypass the static_bitmap check, take the raw bitmap directly)
         g.req_raw_bitmap = 1;
         const uint8_t* bitmap = (const uint8_t*)font->get_glyph_bitmap(&g, nullptr);
         g.req_raw_bitmap = 0;
@@ -1468,11 +1471,11 @@ void CustomLcdDisplay::render_text_to_buffer(const char* text, int start_x, int 
             continue;
         }
 
-        // 字形在帧缓冲中的位置
+        // Glyph position within the framebuffer
         int gx = cursor_x + g.ofs_x;
         int gy = cursor_y + font->line_height - font->base_line - g.ofs_y - g.box_h;
 
-        // 1bpp 字体位图：连续位流 / 或按 stride 对齐
+        // 1bpp font bitmap: contiguous bitstream / or aligned by stride
         int row_bits = (g.stride > 0) ? (int)(g.stride * 8) : (int)g.box_w;
 
         for (int row = 0; row < g.box_h; row++) {
@@ -1504,23 +1507,23 @@ void CustomLcdDisplay::DrawTexts(const std::vector<TextItem>& texts, bool clear)
         const lv_font_t* font = nullptr;
         const char* text = item.content.c_str();
 
-        // 检查图标字体编码类型
+        // Check the icon font encoding type
         if (item.content.size() >= 3) {
-            // FontAwesome 编码: \xef\x8x\xxx (U+F0XX)
+            // FontAwesome encoding: \xef\x8x\xxx (U+F0XX)
             if (item.content[0] == '\xef' &&
                 (item.content[1] & 0xF0) == 0x80) {  // 0x80-0x8F
-                // FontAwesome 天气图标，使用 weather_icons 字体
+                // FontAwesome weather icon, use the weather_icons font
                 font = (item.size >= 40) ? &weather_icons_48 : &weather_icons_16;
             }
-            // IcoMoon 编码: \xee\xa4\xxx (U+E9XX)
+            // IcoMoon encoding: \xee\xa4\xxx (U+E9XX)
             else if (item.content[0] == '\xee' &&
                      item.content[1] == '\xa4') {
-                // IcoMoon 图标，使用 font_zectrix 字体
+                // IcoMoon icon, use the font_zectrix font
                 font = (item.size >= 40) ? &font_zectrix_48_1 : &font_zectrix_16_1;
             }
         }
 
-        // 普通文本使用默认字体
+        // Regular text uses the default font
         if (font == nullptr) {
             if (item.size >= 20) {
                 font = &SourceHanSansSC_Medium_slim;
@@ -1531,7 +1534,7 @@ void CustomLcdDisplay::DrawTexts(const std::vector<TextItem>& texts, bool clear)
         render_text_to_buffer(text, item.x, item.y, font);
     }
 
-    // 标记全屏脏区并触发刷新
+    // Mark the full-screen dirty region and trigger a refresh
     Rect r = clamp_rect(align_x8({0, 0, Width, Height}), Width, Height);
     dirty = rect_union(dirty, r);
     pending = true;

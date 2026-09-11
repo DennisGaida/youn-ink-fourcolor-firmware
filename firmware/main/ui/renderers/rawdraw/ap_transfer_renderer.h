@@ -21,9 +21,9 @@ namespace rawdraw {
  * @brief AP Transfer mode renderer
  * 
  * Shows instructions for WiFi AP image upload:
- * 1. "WiFi 已开启"
- * 2. "连接 InkScreen-AP (密码 12345678)"
- * 3. "浏览器访问 192.168.4.1"
+ * 1. "WiFi is on"
+ * 2. "Connect to InkScreen-AP (password 12345678)"
+ * 3. "Open 192.168.4.1 in browser"
  * 4. Upload progress/status
  */
 class ApTransferRenderer : public PageRenderer {
@@ -66,12 +66,12 @@ private:
     // State
     TransferState state_ = kWaitingForConnection;
     std::string status_message_;
-    std::string title_text_ = "WiFi 传图";
+    std::string title_text_ = "WiFi Transfer";
     std::string ssid_text_ = "InkScreen-AP";
     std::string password_text_ = "12345678";
     std::string url_text_ = "http://192.168.4.1";
     std::string hint_text_;
-    std::string exit_hint_text_ = "长按 BOOT 退出";
+    std::string exit_hint_text_ = "Hold BOOT to exit";
     std::function<void()> exit_callback_;
 
     // Fonts

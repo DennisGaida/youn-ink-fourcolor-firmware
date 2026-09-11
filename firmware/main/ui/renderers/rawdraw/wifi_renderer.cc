@@ -6,24 +6,24 @@
  *
  * CONNECTING state:
  * - Large centered WiFi icon (blinking)
- * - "连接中..." text below
+ * - "Connecting..." text below
  * - Progress bar at bottom
  *
  * CONNECTED state:
  * - Card at top: WiFi icon + SSID + signal bars
  * - Server status card below: icon + status text + URI
- * - "按 BOOT 返回" hint at bottom
+ * - "Press BOOT to return" hint at bottom
  *
  * DISCONNECTED state:
  * - Large X/disconnected icon centered
- * - "已断开" text
+ * - "Disconnected" text
  * - Action hints below
  */
 
 #include "wifi_renderer.h"
 #include "rawdraw/rawdraw.h"
 #include "rawdraw/style.h"
-#include "rawdraw/layout_utils.h"  // FIX: 使用 InkCenteredTextTopYInBox 替代 line_height 居中
+#include "rawdraw/layout_utils.h"  // FIX: use InkCenteredTextTopYInBox instead of line_height centering
 #include "rawdraw/theme.h"
 #include "rawdraw/components/progress_bar.h"
 #include "rawdraw/components/panel.h"
@@ -349,8 +349,9 @@ void WifiRenderer::RenderDisconnected(uint8_t* fb, int width, int height) {
 
     DrawStyledRoundRect(fb, width, height, {btn_x, btn_y, btn_w, btn_h},
                         Style::kBorderRadiusPill, button_style);
-    // FIX: 改用 InkCenteredTextTopYInBox，避免 line_height 居中导致中文偏上
-    // 参见 wiki/projects/notellm-baseline-alignment.md
+    // FIX: switched to InkCenteredTextTopYInBox to avoid line_height centering
+    // pushing Chinese text too high
+    // See wiki/projects/notellm-baseline-alignment.md
     DrawText(fb, width, btn_x + Style::kSpacingMD,
              InkCenteredTextTopYInBox(font_, primary, btn_y, btn_h, 0),
              primary, font_, button_style.fg);

@@ -125,7 +125,7 @@ void ApTransferRenderer::RenderInstructions(uint8_t* fb, int width, int height) 
 
     // Always show the browser URL. The AP/HTTP startup callback can arrive
     // while the e-paper is busy, so relying on status_message_ made the
-    // address occasionally disappear and only show "启动中...".
+    // address occasionally disappear and only show "Starting...".
     const std::string ip = LooksLikeIpv4(status_message_) ? status_message_ : kDefaultApIp;
     const std::string url = url_text_.empty() ? ("http://" + ip) : url_text_;
     ESP_LOGI(kTag, "RenderInstructions ip=%s state=%d message='%s'",

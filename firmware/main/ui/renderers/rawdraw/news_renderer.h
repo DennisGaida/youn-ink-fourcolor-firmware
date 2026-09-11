@@ -47,7 +47,7 @@ private:
     int selected_index_ = 0;
     int scroll_offset_ = 0;
     bool preview_open_ = false;
-    int footer_focus_ = 0;  // 0=关闭, 1=朗读
+    int footer_focus_ = 0;  // 0=close, 1=read aloud
     int preview_scroll_ = 0;  // scroll line offset in preview modal
 
     const lv_font_t* font_ = nullptr;

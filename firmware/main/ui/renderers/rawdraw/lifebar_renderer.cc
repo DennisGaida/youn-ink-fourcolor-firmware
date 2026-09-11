@@ -10,7 +10,7 @@
 #include "lifebar_renderer.h"
 #include "i18n.h"
 #include "rawdraw/rawdraw.h"
-#include "rawdraw/layout_utils.h"  // FIX: 使用 InkCenteredTextTopY 替代 line_height 居中
+#include "rawdraw/layout_utils.h"  // FIX: use InkCenteredTextTopY instead of line_height centering
 #include "rawdraw/components/progress_bar.h"
 #include "rawdraw/theme.h"
 #include <algorithm>
@@ -175,8 +175,9 @@ void LifeBarRenderer::Render(uint8_t* fb, int width, int height) {
         int msg_w = MeasureTextWidth(msg, small_font_);
         int msg_x = (width - msg_w) / 2;
         msg_x = (msg_x + 7) & ~7;
-        // FIX: 改用 InkCenteredTextTopY，避免 line_height 居中导致中文偏上
-        // 参见 wiki/projects/notellm-baseline-alignment.md
+        // FIX: switched to InkCenteredTextTopY to avoid line_height centering
+        // pushing Chinese text too high
+        // See wiki/projects/notellm-baseline-alignment.md
         int msg_y = InkCenteredTextTopY(small_font_, msg, height / 2, 0);
         DrawText(fb, width, msg_x, msg_y, msg, small_font_, text);
 
@@ -257,8 +258,9 @@ void LifeBarRenderer::RenderGauge(uint8_t* fb, int width, int y_start, int avail
     int pct_w = MeasureTextWidth(pct_buf, title_font_);
     int pct_x = cx - pct_w / 2;
     pct_x = (pct_x + 7) & ~7;
-    // FIX: 改用 InkCenteredTextTopY，避免 line_height 居中导致中文偏上
-    // 参见 wiki/projects/notellm-baseline-alignment.md
+    // FIX: switched to InkCenteredTextTopY to avoid line_height centering
+    // pushing Chinese text too high
+    // See wiki/projects/notellm-baseline-alignment.md
     int pct_y = InkCenteredTextTopY(title_font_, pct_buf, cy, 0);
     DrawText(fb, width, pct_x, pct_y, pct_buf, title_font_, accent);
 

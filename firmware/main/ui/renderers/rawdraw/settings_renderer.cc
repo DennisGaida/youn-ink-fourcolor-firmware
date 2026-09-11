@@ -3,10 +3,10 @@
  * @brief Modernized settings page renderer implementation - v3.8.0 visual fix
  *
  * F1 FIXES:
- * - 文字和横线不重叠：横线 y = item_y + item_h - 1，文字在 item 中央偏上
- * - 选中效果：黑色背景矩形 + 白色文字
- * - 版本号从 PROJECT_VER 宏获取，不硬编码
- * - WiFi 图标使用正确码位 "\xee\xa4\x80"/"\xee\xa4\x81"
+ * - Text and divider line no longer overlap: divider y = item_y + item_h - 1, text sits above item center
+ * - Selection effect: black background rectangle + white text
+ * - Version number is read from the PROJECT_VER macro, not hardcoded
+ * - WiFi icon uses the correct code points "\xee\xa4\x80"/"\xee\xa4\x81"
  *
  * Design for 400x300 1bpp ePaper:
  * - Title bar with subtle border
@@ -170,7 +170,7 @@ void ClearDialogRegionRounded(uint8_t* fb, int width, int height,
     } else if (label == "电池方向") {
         icon_char = "\xef\x89\x80";  // U+F240 battery-full
     } else if (label == "重启" || label == "Restart") {
-        icon_char = "\xef\x80\xa1";  // U+F021 sync/refresh (旋转)
+        icon_char = "\xef\x80\xa1";  // U+F021 sync/refresh (rotate)
     } else if (label == "关机" || label == "Power Off") {
         icon_char = "\xef\x80\x91";  // U+F011 power-off
     } else if (label == "日期格式") {
@@ -182,7 +182,7 @@ void ClearDialogRegionRounded(uint8_t* fb, int width, int height,
     } else if (label == "服务") {
         icon_char = "\xef\x88\xb3";  // U+F233 server
     } else if (label == "服务地址") {
-        icon_char = "\xef\x81\x81";  // U+F041 map-marker (定位)
+        icon_char = "\xef\x81\x81";  // U+F041 map-marker (location)
     } else if (label == "蓝牙") {
         icon_char = kIconBluetooth;
     } else {
@@ -920,9 +920,9 @@ bool SettingsRenderer::HandleInput(const ButtonEvent& event) {
         }
     }
 
-    // OTA dialog: UP/DN select version, BOOT confirm (弹出确认框), long BOOT cancel/close.
+    // OTA dialog: UP/DN select version, BOOT confirm (shows a confirmation dialog), long BOOT cancel/close.
     if (showing_ota_dialog_) {
-        // 先处理确认弹窗的输入
+        // Handle input for the confirmation dialog first
         if (showing_ota_confirm_dialog_) {
             switch (event.type) {
                 case ButtonEvent::kUpClick:
@@ -933,7 +933,7 @@ bool SettingsRenderer::HandleInput(const ButtonEvent& event) {
                 case ButtonEvent::kBootClick:
                     showing_ota_confirm_dialog_ = false;
                     if (ota_confirm_selected_ == 0) {
-                        // 确认更新
+                        // Confirm update
                         if (ota_dialog_handler_) ota_dialog_handler_(0, true, false);
                     }
                     needs_full_refresh_ = true;
@@ -941,7 +941,7 @@ bool SettingsRenderer::HandleInput(const ButtonEvent& event) {
                 case ButtonEvent::kBootLongPress:
                 case ButtonEvent::kUpLongPress:
                 case ButtonEvent::kDownLongPress:
-                    // 长按取消确认弹窗，回到版本选择
+                    // Long press cancels the confirmation dialog, back to version selection
                     showing_ota_confirm_dialog_ = false;
                     needs_full_refresh_ = true;
                     return true;
@@ -960,10 +960,10 @@ bool SettingsRenderer::HandleInput(const ButtonEvent& event) {
                 needs_full_refresh_ = true;
                 return true;
             case ButtonEvent::kBootClick:
-                // 选择固件后点击，弹出确认弹窗而不是直接更新
+                // After selecting firmware, show a confirmation dialog instead of updating directly
                 if (ota_state_ == 2 && !ota_versions_.empty() && ota_selected_index_ >= 0) {
                     ota_confirm_firmware_name_ = ota_versions_[ota_selected_index_];
-                    ota_confirm_selected_ = 0;  // 默认确认
+                    ota_confirm_selected_ = 0;  // Default to confirm
                     showing_ota_confirm_dialog_ = true;
                 } else if (ota_dialog_handler_) {
                     ota_dialog_handler_(0, true, false);
@@ -1847,7 +1847,7 @@ void SettingsRenderer::RenderOtaConfirmDialog(uint8_t* fb, int width, int height
     const PaintStyle selected_style = theme.Component(ComponentRole::SettingsSelected);
     const Color text = theme.ColorFor(ThemeToken::TextPrimary);
     const Color secondary = theme.ColorFor(ThemeToken::TextSecondary);
-    // OTA 确认弹窗：显示固件名称，UP/DN 选择确认/取消，BOOT 执行
+    // OTA confirmation dialog: shows firmware name, UP/DN select confirm/cancel, BOOT to proceed
     const int dialog_w = 280;
     const int dialog_h = 160;
     const int dialog_x = (width - dialog_w) / 2;
@@ -1858,15 +1858,15 @@ void SettingsRenderer::RenderOtaConfirmDialog(uint8_t* fb, int width, int height
     DrawStyledRect(fb, width, {dialog_x - kDialogClearPad, dialog_y - kDialogClearPad,
                    dialog_w + kDialogClearPad * 2, dialog_h + kDialogClearPad * 2}, bg_style);
 
-    // 弹窗边框
+    // Dialog border
     DrawStyledRoundRect(fb, width, height, {dialog_x, dialog_y, dialog_w, dialog_h},
                         Style::kBorderRadiusMD, modal_style);
 
-    // 标题栏背景
+    // Title bar background
     DrawStyledRoundRect(fb, width, height, {dialog_x + 1, dialog_y + 1, dialog_w - 2, titlebar_h - 2},
                         Style::kBorderRadiusMD - 1, title_style);
 
-    // 标题
+    // Title
     const char* title = i18n::Tr("确认更新?", "Confirm Update?");
     const int title_w = MeasureTextWidth(title, font_);
     DrawText(fb, width, dialog_x + (dialog_w - title_w) / 2,
@@ -1876,7 +1876,7 @@ void SettingsRenderer::RenderOtaConfirmDialog(uint8_t* fb, int width, int height
     const int content_x = dialog_x + 20;
     int y = dialog_y + titlebar_h + 15;
 
-    // 显示固件名称
+    // Show firmware name
     std::string firmware_label = std::string(i18n::Tr("固件: ", "Firmware: ")) + ota_confirm_firmware_name_;
     firmware_label = FitTextToWidth(firmware_label, font_, dialog_w - 60);
     DrawText(fb, width, content_x,
@@ -1884,7 +1884,7 @@ void SettingsRenderer::RenderOtaConfirmDialog(uint8_t* fb, int width, int height
              firmware_label.c_str(), font_, secondary, height);
     y += row_h + 8;
 
-    // 确认/取消选项
+    // Confirm/cancel options
     const char* options[2] = {i18n::Tr("确认更新", "Confirm Update"), i18n::Tr("取消", "Cancel")};
     for (int i = 0; i < 2; ++i) {
         const bool is_selected = (i == ota_confirm_selected_);

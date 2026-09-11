@@ -316,7 +316,7 @@ void ChatRenderer::DrawScrollIndicator(uint8_t* fb, int width,
 
 void ChatRenderer::DrawStreamingIndicator(uint8_t* fb, int width,
                                            int content_bottom) {
-    // Animated dots: "思考中" + pulsing dots
+    // Animated dots: "Thinking" + pulsing dots
     const int indicator_y = content_bottom - Style::kSpacingXL;
     const int padding = Style::kSpacingSM;
 

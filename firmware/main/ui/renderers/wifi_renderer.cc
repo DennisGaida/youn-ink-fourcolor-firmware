@@ -23,7 +23,7 @@ void WifiRenderer::Create(lv_obj_t* parent, int x, int y, int w, int h) {
         return;
     }
 
-    // 主面板
+    // Main panel
     panel_ = lv_obj_create(parent);
     lv_obj_set_pos(panel_, x, y);
     lv_obj_set_size(panel_, w, h);
@@ -34,28 +34,28 @@ void WifiRenderer::Create(lv_obj_t* parent, int x, int y, int w, int h) {
     lv_obj_set_style_border_width(panel_, 1, 0);
     lv_obj_set_style_pad_all(panel_, 12, 0);
 
-    // WiFi 图标（左侧）
+    // WiFi icon (left side)
     wifi_icon_ = lv_label_create(panel_);
     lv_label_set_text(wifi_icon_, "");
     lv_obj_set_style_text_font(wifi_icon_, &font_zectrix_16_1, 0);
     lv_obj_set_style_text_color(wifi_icon_, lv_color_black(), 0);
     lv_obj_align(wifi_icon_, LV_ALIGN_LEFT_MID, 0, 0);
 
-    // 状态文本（右上）
+    // Status text (top right)
     status_label_ = lv_label_create(panel_);
     lv_label_set_text(status_label_, "");
     lv_obj_set_style_text_font(status_label_, &SourceHanSansSC_Regular_slim, 0);
     lv_obj_set_style_text_color(status_label_, lv_color_black(), 0);
     lv_obj_align(status_label_, LV_ALIGN_TOP_MID, 20, 4);
 
-    // SSID 标签（状态下方）
+    // SSID label (below status)
     ssid_label_ = lv_label_create(panel_);
     lv_label_set_text(ssid_label_, "");
     lv_obj_set_style_text_font(ssid_label_, &SourceHanSansSC_Regular_slim, 0);
     lv_obj_set_style_text_color(ssid_label_, lv_color_hex(0x666666), 0);
     lv_obj_align(ssid_label_, LV_ALIGN_LEFT_MID, 24, 8);
 
-    // 进度条（底部）
+    // Progress bar (bottom)
     progress_bar_ = lv_bar_create(panel_);
     lv_obj_set_size(progress_bar_, LV_PCT(80), 8);
     lv_obj_align(progress_bar_, LV_ALIGN_BOTTOM_MID, 0, -4);
@@ -68,21 +68,21 @@ void WifiRenderer::Create(lv_obj_t* parent, int x, int y, int w, int h) {
     lv_obj_set_style_radius(progress_bar_, 4, 0);
     lv_obj_set_style_radius(progress_bar_, 4, LV_PART_INDICATOR);
 
-    // 提示文本
+    // Hint text
     hint_label_ = lv_label_create(panel_);
     lv_label_set_text(hint_label_, "");
     lv_obj_set_style_text_font(hint_label_, &SourceHanSansSC_Regular_slim, 0);
     lv_obj_set_style_text_color(hint_label_, lv_color_hex(0x999999), 0);
     lv_obj_align(hint_label_, LV_ALIGN_BOTTOM_MID, 0, -16);
 
-    // 服务状态
+    // Server status
     server_label_ = lv_label_create(panel_);
     lv_label_set_text(server_label_, "");
     lv_obj_set_style_text_font(server_label_, &SourceHanSansSC_Regular_slim, 0);
     lv_obj_set_style_text_color(server_label_, lv_color_hex(0x666666), 0);
     lv_obj_align(server_label_, LV_ALIGN_BOTTOM_LEFT, 4, -30);
 
-    // 默认显示断开状态
+    // Show disconnected state by default
     RenderDisconnected({});
 
     lvgl_port_unlock();
@@ -95,7 +95,7 @@ void WifiRenderer::Update(const WifiStatus& status) {
 
     if (status.state != current_state_) {
         current_state_ = status.state;
-        // 状态切换时重新渲染
+        // Re-render when the state changes
         switch (status.state) {
             case WifiState::Connecting:
                 RenderConnecting(status);
@@ -108,39 +108,39 @@ void WifiRenderer::Update(const WifiStatus& status) {
                 break;
         }
     } else {
-        // 同状态下更新数据
+        // Update data while staying in the same state
         switch (status.state) {
             case WifiState::Connecting:
-                // 更新进度
+                // Update progress
                 if (progress_bar_) {
                     lv_bar_set_value(progress_bar_, status.progress, LV_ANIM_OFF);
                 }
                 break;
             case WifiState::Connected:
-                // 更新信号强度图标
+                // Update signal strength icon
                 if (wifi_icon_) {
                     lv_label_set_text(wifi_icon_, GetWifiIcon(status.signal_strength));
                 }
                 if (ssid_label_) {
                     lv_label_set_text(ssid_label_, status.ssid.c_str());
                 }
-                // 更新服务状态
+                // Update server status
                 if (server_label_) {
                     if (status.server_connected) {
-                        lv_label_set_text(server_label_, "服务: 在线");
+                        lv_label_set_text(server_label_, "Service: online");
                         lv_obj_set_style_text_color(server_label_, lv_color_hex(0x006600), 0);
                     } else if (!status.server_uri.empty()) {
-                        std::string uri = "服务: " + status.server_uri;
+                        std::string uri = "Service: " + status.server_uri;
                         lv_label_set_text(server_label_, uri.c_str());
                         lv_obj_set_style_text_color(server_label_, lv_color_hex(0x996600), 0);
                     } else {
-                        lv_label_set_text(server_label_, "服务: 离线");
+                        lv_label_set_text(server_label_, "Service: offline");
                         lv_obj_set_style_text_color(server_label_, lv_color_hex(0x990000), 0);
                     }
                 }
                 break;
             case WifiState::Disconnected:
-                // 无需额外更新
+                // No additional update needed
                 break;
         }
     }
@@ -151,37 +151,37 @@ void WifiRenderer::Update(const WifiStatus& status) {
 void WifiRenderer::RenderConnecting(const WifiStatus& status) {
     if (!lvgl_port_lock(0)) return;
 
-    // WiFi icon 闪烁
+    // WiFi icon blinking
     if (wifi_icon_) {
         lv_label_set_text(wifi_icon_, FONT_ZECTRIX_WIFI_FAIR);
         lv_obj_set_style_text_color(wifi_icon_, lv_color_hex(0x996600), 0);
     }
 
-    // 状态文本
+    // Status text
     if (status_label_) {
-        lv_label_set_text(status_label_, "连接中...");
+        lv_label_set_text(status_label_, "Connecting...");
         lv_obj_set_style_text_color(status_label_, lv_color_hex(0x996600), 0);
     }
 
-    // 隐藏 SSID
+    // Hide SSID
     if (ssid_label_) {
         lv_obj_add_flag(ssid_label_, LV_OBJ_FLAG_HIDDEN);
     }
 
-    // 显示进度条
+    // Show progress bar
     if (progress_bar_) {
         lv_obj_remove_flag(progress_bar_, LV_OBJ_FLAG_HIDDEN);
         lv_bar_set_value(progress_bar_, status.progress, LV_ANIM_OFF);
     }
 
-    // 隐藏提示
+    // Hide hint
     if (hint_label_) {
         lv_obj_add_flag(hint_label_, LV_OBJ_FLAG_HIDDEN);
     }
 
-    // 服务状态
+    // Server status
     if (server_label_) {
-        lv_label_set_text(server_label_, "正在发现服务...");
+        lv_label_set_text(server_label_, "Discovering service...");
         lv_obj_set_style_text_color(server_label_, lv_color_hex(0x996600), 0);
         lv_obj_remove_flag(server_label_, LV_OBJ_FLAG_HIDDEN);
     }
@@ -193,47 +193,47 @@ void WifiRenderer::RenderConnecting(const WifiStatus& status) {
 void WifiRenderer::RenderConnected(const WifiStatus& status) {
     if (!lvgl_port_lock(0)) return;
 
-    // 实心 WiFi icon
+    // Solid WiFi icon
     if (wifi_icon_) {
         const char* icon = GetWifiIcon(status.signal_strength);
         lv_label_set_text(wifi_icon_, icon);
         lv_obj_set_style_text_color(wifi_icon_, lv_color_black(), 0);
     }
 
-    // 状态文本
+    // Status text
     if (status_label_) {
-        lv_label_set_text(status_label_, "已连接");
+        lv_label_set_text(status_label_, "Connected");
         lv_obj_set_style_text_color(status_label_, lv_color_hex(0x006600), 0);
     }
 
-    // 显示 SSID
+    // Show SSID
     if (ssid_label_) {
         lv_obj_remove_flag(ssid_label_, LV_OBJ_FLAG_HIDDEN);
         lv_label_set_text(ssid_label_, status.ssid.c_str());
     }
 
-    // 隐藏进度条
+    // Hide progress bar
     if (progress_bar_) {
         lv_obj_add_flag(progress_bar_, LV_OBJ_FLAG_HIDDEN);
     }
 
-    // 隐藏提示
+    // Hide hint
     if (hint_label_) {
         lv_obj_add_flag(hint_label_, LV_OBJ_FLAG_HIDDEN);
     }
 
-    // 服务状态
+    // Server status
     if (server_label_) {
         lv_obj_remove_flag(server_label_, LV_OBJ_FLAG_HIDDEN);
         if (status.server_connected) {
-            lv_label_set_text(server_label_, "服务: 在线");
+            lv_label_set_text(server_label_, "Service: online");
             lv_obj_set_style_text_color(server_label_, lv_color_hex(0x006600), 0);
         } else if (!status.server_uri.empty()) {
-            std::string uri = "服务: " + status.server_uri;
+            std::string uri = "Service: " + status.server_uri;
             lv_label_set_text(server_label_, uri.c_str());
             lv_obj_set_style_text_color(server_label_, lv_color_hex(0x996600), 0);
         } else {
-            lv_label_set_text(server_label_, "服务: 离线");
+            lv_label_set_text(server_label_, "Service: offline");
             lv_obj_set_style_text_color(server_label_, lv_color_hex(0x990000), 0);
         }
     }
@@ -245,37 +245,37 @@ void WifiRenderer::RenderConnected(const WifiStatus& status) {
 void WifiRenderer::RenderDisconnected(const WifiStatus& status) {
     if (!lvgl_port_lock(0)) return;
 
-    // 叉号 WiFi icon
+    // WiFi icon with an X
     if (wifi_icon_) {
         lv_label_set_text(wifi_icon_, FONT_ZECTRIX_WIFI_SLASH);
         lv_obj_set_style_text_color(wifi_icon_, lv_color_hex(0x990000), 0);
     }
 
-    // 状态文本
+    // Status text
     if (status_label_) {
-        lv_label_set_text(status_label_, "已断开");
+        lv_label_set_text(status_label_, "Disconnected");
         lv_obj_set_style_text_color(status_label_, lv_color_hex(0x990000), 0);
     }
 
-    // 隐藏 SSID
+    // Hide SSID
     if (ssid_label_) {
         lv_obj_add_flag(ssid_label_, LV_OBJ_FLAG_HIDDEN);
     }
 
-    // 隐藏进度条
+    // Hide progress bar
     if (progress_bar_) {
         lv_obj_add_flag(progress_bar_, LV_OBJ_FLAG_HIDDEN);
     }
 
-    // 显示提示
+    // Show hint
     if (hint_label_) {
         lv_obj_remove_flag(hint_label_, LV_OBJ_FLAG_HIDDEN);
-        lv_label_set_text(hint_label_, "按 BOOT 重连");
+        lv_label_set_text(hint_label_, "Press BOOT to reconnect");
     }
 
-    // 服务状态
+    // Server status
     if (server_label_) {
-        lv_label_set_text(server_label_, "服务: 未连接");
+        lv_label_set_text(server_label_, "Service: not connected");
         lv_obj_set_style_text_color(server_label_, lv_color_hex(0x990000), 0);
         lv_obj_remove_flag(server_label_, LV_OBJ_FLAG_HIDDEN);
     }
@@ -285,7 +285,7 @@ void WifiRenderer::RenderDisconnected(const WifiStatus& status) {
 }
 
 const char* WifiRenderer::GetWifiIcon(int signal_dbm) {
-    // 将信号强度转为图标
+    // Convert signal strength to an icon
     if (signal_dbm >= -50) {
         return FONT_ZECTRIX_WIFI_FULL;
     } else if (signal_dbm >= -65) {
@@ -298,7 +298,7 @@ const char* WifiRenderer::GetWifiIcon(int signal_dbm) {
 }
 
 int WifiRenderer::SignalToPercent(int dbm) const {
-    // dBm 范围: -30 (最强) 到 -90 (最弱)
+    // dBm range: -30 (strongest) to -90 (weakest)
     if (dbm >= -30) return 100;
     if (dbm <= -90) return 0;
     return static_cast<int>((dbm + 90) * 100.0f / 60.0f);

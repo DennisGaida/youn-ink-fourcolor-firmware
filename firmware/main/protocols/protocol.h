@@ -41,7 +41,7 @@ enum AbortReason {
 enum ListeningMode {
     kListeningModeAutoStop,
     kListeningModeManualStop,
-    kListeningModeRealtime // 需要 AEC 支持
+    kListeningModeRealtime // Requires AEC support
 };
 
 class Protocol {
@@ -109,7 +109,7 @@ protected:
     std::atomic<int64_t> last_restart_ms_{0};
     std::atomic<bool> idle_timeout_pending_{false};
 
-    // v2.0 协议支持
+    // v2.0 protocol support
     std::string protocol_version_ = "2.0";
     std::string device_id_;
     uint32_t msg_sequence_ = 0;

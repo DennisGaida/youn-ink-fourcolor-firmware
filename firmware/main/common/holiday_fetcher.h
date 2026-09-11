@@ -1,17 +1,17 @@
 /**
  * @file holiday_fetcher.h
- * @brief Chinese official holiday schedule (State Council / 国务院调休)
+ * @brief Chinese official holiday schedule (State Council / State Council rest-day rescheduling)
  *
  * Fetches from timor.tech free API, caches in NVS.
  *
  * API response format:
- *   {"code":0, "holiday":{"2026-01-01":{"name":"元旦","rest":1},...}}
+ *   {"code":0, "holiday":{"2026-01-01":{"name":"元旦" (New Year's Day),"rest":1},...}}
  *
  * Usage:
  *   HolidayFetcher::Init();                    // at boot
  *   HolidayFetcher::Fetch(2026);               // fetch + cache
- *   HolidayFetcher::IsHoliday(2026, 5, 1);     // → true (劳动节)
- *   HolidayFetcher::IsMakeupWorkday(2026, 5, 4); // → true (补班)
+ *   HolidayFetcher::IsHoliday(2026, 5, 1);     // → true (Labor Day)
+ *   HolidayFetcher::IsMakeupWorkday(2026, 5, 4); // → true (makeup workday)
  */
 
 #ifndef HOLIDAY_FETCHER_H
@@ -34,8 +34,8 @@ struct HolidayEntry {
     int16_t year;    // e.g. 2026
     int8_t month;    // 1-12
     int8_t day;      // 1-31
-    char name[16];   // "春节", "国庆节", etc.
-    bool is_rest;    // true = holiday/rest, false = makeup workday (补班)
+    char name[16];   // "春节" (Spring Festival), "国庆节" (National Day), etc.
+    bool is_rest;    // true = holiday/rest, false = makeup workday
 };
 
 /**
@@ -66,26 +66,26 @@ bool Init();
 bool Fetch(int year);
 
 /**
- * @brief Check if a date is an official rest day (休).
+ * @brief Check if a date is an official rest day.
  * @return true if date is marked as rest (includes official holidays)
  */
 bool IsHoliday(int year, int month, int day);
 
 /**
- * @brief Check if a date is a compensatory workday (班).
+ * @brief Check if a date is a compensatory workday.
  * @return true if a weekend date requires makeup work
  */
 bool IsMakeupWorkday(int year, int month, int day);
 
 /**
  * @brief Get the holiday name for a rest day.
- * @return Holiday name (e.g. "春节") or nullptr if not a holiday
+ * @return Holiday name (e.g. "春节" / Spring Festival) or nullptr if not a holiday
  */
 const char* GetHolidayName(int year, int month, int day);
 
 /**
- * @brief Get the "班" label if the date is a makeup workday.
- * @return "班" or nullptr
+ * @brief Get the "Work" label if the date is a makeup workday.
+ * @return "Work" or nullptr
  */
 const char* GetMakeupLabel(int year, int month, int day);
 

@@ -5,7 +5,7 @@
 
 namespace ui {
 
-// 按钮事件结构
+// Button event structure
 struct ButtonEvent {
     enum Type {
         kUpClick,
@@ -21,36 +21,36 @@ struct ButtonEvent {
     Type type;
 };
 
-// PageRenderer 基类接口 (Spec §1)
-// 所有页面渲染器必须实现此接口
+// PageRenderer base class interface (Spec §1)
+// All page renderers must implement this interface
 class PageRenderer {
 public:
     virtual ~PageRenderer() = default;
 
-    // 创建页面 UI（在 LVGL 锁内调用）
+    // Create the page UI (called within the LVGL lock)
     virtual void Create(lv_obj_t* parent) = 0;
 
-    // 销毁页面 UI（在 LVGL 锁内调用）
+    // Destroy the page UI (called within the LVGL lock)
     virtual void Destroy() = 0;
 
-    // 更新页面数据（在 LVGL 锁内调用）
+    // Update the page data (called within the LVGL lock)
     virtual void Update() = 0;
 
-    // 处理输入事件
-    // 返回 true 表示消费了事件
+    // Handle an input event
+    // Returns true if the event was consumed
     virtual bool HandleInput(const ButtonEvent& event) = 0;
 
-    // 获取根对象
+    // Get the root object
     virtual lv_obj_t* root() const = 0;
 
-    // 流式追加文本到当前气泡（用于 LLM streaming）
-    // 返回 true 表示成功追加
+    // Append streaming text to the current bubble (used for LLM streaming)
+    // Returns true if the append succeeded
     virtual bool AppendText(const char* chunk) { (void)chunk; return false; }
 
-    // 开始新的流式响应（清空当前气泡或创建新气泡）
+    // Begin a new streaming response (clears the current bubble or creates a new one)
     virtual void BeginStream() {}
 
-    // 结束流式响应
+    // End the streaming response
     virtual void EndStream() {}
 };
 

@@ -41,20 +41,20 @@ public:
     virtual void RequestUrgentRefresh() {}
     virtual void RequestUrgentFullRefresh() {}
 
-    // 获取 LVGL display 对象（用于 LVGL UI 模块）
+    // Get the LVGL display object (used by the LVGL UI module)
 #ifdef HAVE_LVGL
     virtual lv_display_t* GetLvDisplay() { return nullptr; }
 #endif
 
-    // 写入原始 1bpp 位图数据到帧缓冲区（由子类实现）
-    // data 中 bit=1 表示黑色像素，bit=0 表示白色像素
+    // Write raw 1bpp bitmap data to the frame buffer (implemented by subclass)
+    // In data, bit=1 means black pixel, bit=0 means white pixel
     virtual void WriteRaw1bpp(int x, int y, int w, int h, const uint8_t* data, size_t len) { (void)x; (void)y; (void)w; (void)h; (void)data; (void)len; }
 
-    // 对帧缓冲区的指定区域进行反色（XOR 操作）
-    // bit=1 变为 bit=0（黑变白），bit=0 变为 bit=1（白变黑）
+    // Invert (XOR) the specified region of the frame buffer
+    // bit=1 becomes bit=0 (black to white), bit=0 becomes bit=1 (white to black)
     virtual void InvertRegion(int x, int y, int w, int h) { (void)x; (void)y; (void)w; (void)h; }
 
-    // 文本渲染项
+    // Text render item
     struct TextItem {
         std::string content;
         int x = 0;
@@ -62,10 +62,10 @@ public:
         int size = 24;  // 16 or 24
     };
 
-    // 直接在设备端渲染文本到帧缓冲区（由子类实现）
+    // Render text directly on-device to the frame buffer (implemented by subclass)
     virtual void DrawTexts(const std::vector<TextItem>& texts, bool clear) { (void)texts; (void)clear; }
 
-    // 更新图片页缓存（默认无实现）
+    // Update the picture page cache (no-op by default)
     virtual void UpdatePicRegion(int x, int y, int w, int h, const uint8_t* data, size_t len) {
         (void)x;
         (void)y;
@@ -75,7 +75,7 @@ public:
         (void)len;
     }
 
-    // 图片页是否存在有效内容（默认无）
+    // Whether the picture page has valid content (none by default)
     virtual bool HasPicContent() const { return false; }
 
     // Direct raw 4-color EPD frame display. Data is packed 2bpp, four pixels per byte.

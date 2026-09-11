@@ -2,7 +2,7 @@
  * @file almanac_renderer.h
  * @brief Almanac page renderer for rawdraw mode
  *
- * Displays lunar date, solar terms, and traditional almanac info (宜忌).
+ * Displays lunar date, solar terms, and traditional almanac info (favorable/unfavorable activities).
  * Uses Calendar::ToLunarDate() for lunar calendar conversion.
  */
 

@@ -8,47 +8,47 @@
 
 namespace ui {
 
-// 设置项类型
+// Settings item type
 enum class SettingsItemType {
-    Normal,    // 普通项，显示 >
-    Checkbox,  // 可勾选项，显示 [x] 或 [ ]
-    Action,    // 操作项，显示 >
+    Normal,    // Normal item, shows >
+    Checkbox,  // Checkable item, shows [x] or [ ]
+    Action,    // Action item, shows >
 };
 
-// 设置项结构
+// Settings item structure
 struct SettingsItem {
-    std::string label;                   // 显示文本
-    std::string value;                   // 当前值（可选）
+    std::string label;                   // Display text
+    std::string value;                   // Current value (optional)
     SettingsItemType type = SettingsItemType::Normal;
-    bool checked = false;                // Checkbox 类型的选中状态
-    std::function<void()> on_click;      // 点击回调
+    bool checked = false;                // Checked state for Checkbox type
+    std::function<void()> on_click;      // Click callback
 };
 
-// 设置页面 - lv_list 组件（spec_v2 扁平化列表菜单）
+// Settings page - lv_list component (spec_v2 flattened list menu)
 class SettingsPage {
 public:
     SettingsPage(lv_obj_t* parent);
     ~SettingsPage();
 
-    // 设置设置项列表
+    // Set the list of settings items
     void SetItems(const std::vector<SettingsItem>& items);
 
-    // 更新单项显示值
+    // Update the displayed value of a single item
     void UpdateItem(int index, const std::string& value);
 
-    // 更新 Checkbox 项的选中状态
+    // Update the checked state of a Checkbox item
     void UpdateChecked(int index, bool checked);
 
-    // 刷新显示
+    // Refresh display
     void Refresh();
 
 private:
-    lv_obj_t* list_ = nullptr;           // lv_list 控件
-    std::vector<lv_obj_t*> items_;       // 列表项控件
-    std::vector<SettingsItem> item_data_; // 保存项数据
-    std::vector<std::function<void()>*> callbacks_; // 回调指针，用于释放内存
+    lv_obj_t* list_ = nullptr;           // lv_list widget
+    std::vector<lv_obj_t*> items_;       // List item widgets
+    std::vector<SettingsItem> item_data_; // Saved item data
+    std::vector<std::function<void()>*> callbacks_; // Callback pointers, for freeing memory
 
-    // 获取项的前缀符号
+    // Get the prefix symbol for an item
     const char* GetItemSymbol(const SettingsItem& item) const;
 };
 

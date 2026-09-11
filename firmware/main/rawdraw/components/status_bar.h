@@ -15,7 +15,7 @@
  *
  * Usage:
  * 1. Create status bar: StatusBarCreate()
- * 2. Show text: StatusBarShow("已保存", 3000)  // 3s auto-hide
+ * 2. Show text: StatusBarShow("Saved", 3000)  // 3s auto-hide
  * 3. Hide manually: StatusBarHide()
  * 4. Draw when needed: StatusBarDraw(fb, width, height)
  */

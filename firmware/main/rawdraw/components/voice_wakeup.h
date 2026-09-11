@@ -131,10 +131,10 @@ void VoiceWakeupTick(VoiceWakeupState* state, int64_t now_us);
  * @brief Draw voice wakeup overlay to framebuffer
  *
  * Only draws if visible. Shows state-appropriate text:
- * - RECORDING: "录音中..."
- * - WAITING_RESPONSE: "处理中..."
- * - OFFLINE_MSG: "离线不可用"
- * - DONE: "完成"
+ * - RECORDING: "Recording..."
+ * - WAITING_RESPONSE: "Processing..."
+ * - OFFLINE_MSG: "Voice unavailable while offline"
+ * - DONE: "Done"
  *
  * @param fb Framebuffer pointer
  * @param width Framebuffer width

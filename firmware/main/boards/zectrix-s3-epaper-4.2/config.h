@@ -22,7 +22,7 @@
 
 #define TODO_UP_BUTTON_GPIO     GPIO_NUM_39
 #define TODO_DOWN_BUTTON_GPIO   GPIO_NUM_18
-//开机电源键与下键复用
+// Power-on button shares the pin with the down button
 #define VBAT_PWR_GPIO           GPIO_NUM_18
 #define TODO_CONFIRM_BUTTON_GPIO GPIO_NUM_0
 #define CHARGE_DETECT_GPIO      GPIO_NUM_2

@@ -10,68 +10,68 @@
 
 namespace ui {
 
-// 聊天消息角色
+// Chat message role
 enum class ChatRole {
-    User,   // 用户消息（右侧，黑底白字）
-    AI,     // AI 回复（左侧，白底黑框）
-    System  // 系统提示（居中，透明）
+    User,   // User message (right side, black background with white text)
+    AI,     // AI reply (left side, white background with black border)
+    System  // System hint (centered, transparent)
 };
 
-// 聊天消息
+// Chat message
 struct ChatMessage {
     std::string text;
     ChatRole role;
 };
 
-// AI 对话页 - 修复版（Spec §3）
-// 修复：文字不显示、流式追加、自动换行
+// AI chat page - fixed version (Spec §3)
+// Fixes: text not showing, streaming append, auto line wrap
 class ChatPage {
 public:
     ChatPage(lv_obj_t* parent);
     ~ChatPage();
 
-    // 清空消息列表
+    // Clear the message list
     void Clear();
 
-    // 添加消息（自动滚动到底部）
+    // Add a message (auto-scrolls to the bottom)
     void AddMessage(const std::string& text, ChatRole role);
 
-    // 显示临时状态提示（录音/识别/思考）
+    // Show a temporary status hint (recording/recognizing/thinking)
     void ShowStatus(const std::string& status, ChatRole role);
 
-    // 隐藏状态提示
+    // Hide the status hint
     void HideStatus();
 
-    // 流式追加文本到最后一个气泡（用于 LLM streaming）
+    // Stream-append text to the last bubble (for LLM streaming)
     void AppendText(const std::string& chunk);
 
-    // 开始新的流式响应（创建新的 AI 气泡）
+    // Start a new streaming response (creates a new AI bubble)
     void BeginStream();
 
-    // 结束流式响应
+    // End the streaming response
     void EndStream();
 
-    // 获取最后一个气泡用于流式追加
+    // Get the last bubble for stream-appending
     Bubble* GetLastBubble() const;
 
-    // 获取容器对象（供渲染器使用）
+    // Get the container object (for use by the renderer)
     lv_obj_t* container() const { return container_; }
 
-    // 刷新显示
+    // Refresh display
     void Refresh();
 
 private:
-    // 气泡容器管理
+    // Bubble container management
     struct BubbleEntry {
         std::unique_ptr<Bubble> bubble;
         ChatRole role;
     };
 
-    lv_obj_t* container_ = nullptr;       // Flex 滚动容器
-    lv_obj_t* status_bubble_ = nullptr;   // 临时状态气泡
+    lv_obj_t* container_ = nullptr;       // Flex scroll container
+    lv_obj_t* status_bubble_ = nullptr;   // Temporary status bubble
     Bubble* status_bubble_wrapper_ = nullptr;
-    std::vector<BubbleEntry> bubbles_;    // 消息气泡列表
-    bool is_streaming_ = false;           // 是否正在流式接收
+    std::vector<BubbleEntry> bubbles_;    // Message bubble list
+    bool is_streaming_ = false;           // Whether currently streaming
 };
 
 }  // namespace ui

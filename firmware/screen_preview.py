@@ -227,7 +227,7 @@ def render_chat_page(draw):
     bar_y = kScreenHeight - kBottomBarH
     draw_rect(draw, 0, bar_y, kScreenWidth, kBottomBarH, 255)
     draw_hline(draw, bar_y, 0, kScreenWidth - 1, 0)
-    # "正在聆听..." centered
+    # "Listening..." centered
     listen_text = "正在聆听..."
     listen_w = measure_text_width(listen_text, font_regular)
     listen_x = (kScreenWidth - listen_w) // 2
@@ -248,7 +248,7 @@ def render_settings_page(draw):
     content_bottom = kScreenHeight - kSpacingSM  # 294
     content_left = kSpacingMD  # 8
 
-    # Flat list: Wi-Fi, 服务, 音量, 电池方向, 关于 (no icon for WiFi/Srv)
+    # Flat list: Wi-Fi, Service, Volume, Battery Orientation, About (no icon for WiFi/Srv)
     items = [
         {'label': 'Wi-Fi', 'value': '已连接', 'icon': None, 'type': 'Normal'},
         {'label': '服务', 'value': '在线', 'icon': None, 'type': 'Normal'},

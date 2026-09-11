@@ -7,34 +7,34 @@
 
 namespace ui {
 
-// 日志条目
+// Log entry
 struct LogEntry {
     std::string text;
     int level = 0;  // 0=info, 1=warn, 2=error
 };
 
-// 日志页面 - 系统日志查看
+// Log page - system log viewer
 class LogPage {
 public:
     LogPage(lv_obj_t* parent);
     ~LogPage();
 
-    // 清空日志
+    // Clear the log
     void Clear();
 
-    // 添加日志条目
+    // Add a log entry
     void AddEntry(const std::string& text, int level = 0);
 
-    // 设置日志列表
+    // Set the log list
     void SetEntries(const std::vector<LogEntry>& entries);
 
-    // 刷新显示
+    // Refresh display
     void Refresh();
 
 private:
-    lv_obj_t* container_ = nullptr;     // 容器
-    lv_obj_t* log_label_ = nullptr;     // 日志文本标签
-    std::vector<std::string> entries_;  // 日志内容
+    lv_obj_t* container_ = nullptr;     // Container
+    lv_obj_t* log_label_ = nullptr;     // Log text label
+    std::vector<std::string> entries_;  // Log content
 };
 
 }  // namespace ui

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-mock_client.py — 模拟 ESP32 固件与 llmserve.py 进行端到端测试
+mock_client.py — simulates the ESP32 firmware for end-to-end testing against llmserve.py
 
-用法:
-    python3 mock_client.py                          # 默认 localhost:9001
-    python3 mock_client.py --server ws://192.168.1.100:9001  # 指定服务器
+Usage:
+    python3 mock_client.py                          # default localhost:9001
+    python3 mock_client.py --server ws://192.168.1.100:9001  # specify server
 
-测试流程:
-    1. (可选) UDP Discovery
-    2. WebSocket 连接 + hello 握手
-    3. 发送 ptt_start + 模拟 PCM16 音频
-    4. 发送 ptt_stop
-    5. 接收并打印所有服务器响应 (ASR → LLM → TTS → summary)
+Test flow:
+    1. (optional) UDP Discovery
+    2. WebSocket connection + hello handshake
+    3. Send ptt_start + simulated PCM16 audio
+    4. Send ptt_stop
+    5. Receive and print all server responses (ASR → LLM → TTS → summary)
 """
 
 import asyncio
@@ -29,26 +29,26 @@ import websockets
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("mock_client")
 
-# ─── 配置 ───────────────────────────────────────────────
+# ─── Configuration ───────────────────────────────────────────────
 DEFAULT_SERVER = "ws://127.0.0.1:9001"
 DISCOVERY_PORT = 8766
-SIMULATED_AUDIO_DURATION_MS = 2000  # 模拟 2 秒录音
+SIMULATED_AUDIO_DURATION_MS = 2000  # simulate 2 seconds of recording
 SAMPLE_RATE = 16000
 CHANNELS = 1
 BITS_PER_SAMPLE = 16
 
 
 def generate_dummy_audio(duration_ms: int) -> bytes:
-    """生成模拟的 PCM16 16kHz 单声道音频（静音 + 轻微噪音）"""
+    """Generate simulated PCM16 16kHz mono audio (silence + light noise)"""
     import random
     num_samples = int(duration_ms * SAMPLE_RATE / 1000)
-    # 半静音（低振幅噪音模拟语音），让 ASR 不会立即返回空
+    # Semi-silence (low-amplitude noise simulating speech), so ASR doesn't immediately return empty
     data = struct.pack(f"<{num_samples}h", *[random.randint(-100, 100) for _ in range(num_samples)])
     return data
 
 
 def sign_discovery_reply(host_id, host_name, ws_url, nonce, secret):
-    """生成 HMAC-SHA256 签名"""
+    """Generate an HMAC-SHA256 signature"""
     import hmac
     import hashlib
     message = f"discover_reply|{host_id}|{host_name}|{ws_url}|{nonce}"
@@ -60,8 +60,8 @@ def sign_discovery_reply(host_id, host_name, ws_url, nonce, secret):
 
 
 async def run_discovery() -> str | None:
-    """UDP 设备发现，返回 wsUrl 或 None"""
-    logger.info("📡 发送 UDP discover_host...")
+    """UDP device discovery; returns wsUrl or None"""
+    logger.info("📡 Sending UDP discover_host...")
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     sock.settimeout(3.0)
@@ -81,14 +81,14 @@ async def run_discovery() -> str | None:
         logger.info("📡 Discovery reply from %s: %s", addr, json.dumps(reply, ensure_ascii=False))
         return reply.get("wsUrl")
     except socket.timeout:
-        logger.warning("📡 Discovery 超时")
+        logger.warning("📡 Discovery timed out")
         return None
     finally:
         sock.close()
 
 
 async def run_full_test(server_url: str):
-    """执行完整的 PTT → ASR → LLM → TTS 测试流程"""
+    """Run the full PTT → ASR → LLM → TTS test flow"""
 
     results = {
         "hello_ack": False,
@@ -107,19 +107,19 @@ async def run_full_test(server_url: str):
     t0 = time.time()
 
     try:
-        logger.info(f"🔌 连接 WebSocket: {server_url}")
+        logger.info(f"🔌 Connecting WebSocket: {server_url}")
         async with websockets.connect(server_url) as ws:
 
-            # ── Step 1: Hello 握手 ──
+            # ── Step 1: Hello handshake ──
             hello = json.dumps({
                 "type": "hello",
                 "deviceId": "mock-client-001",
                 "boardType": "mock-test",
             })
             await ws.send(hello)
-            logger.info("📨 发送 hello")
+            logger.info("📨 Sent hello")
 
-            # ── Step 2: 接收 hello_ack + server_ready ──
+            # ── Step 2: Receive hello_ack + server_ready ──
             for _ in range(5):
                 msg = await asyncio.wait_for(ws.recv(), timeout=10)
                 if isinstance(msg, str):
@@ -134,45 +134,45 @@ async def run_full_test(server_url: str):
                         break
 
             if not results["hello_ack"]:
-                results["errors"].append("未收到 hello_ack")
+                results["errors"].append("hello_ack not received")
                 return results
             if not results["server_ready"]:
-                results["errors"].append("未收到 server_ready")
+                results["errors"].append("server_ready not received")
                 return results
 
             results["timing"]["hello_ms"] = int((time.time() - t0) * 1000)
-            logger.info(f"✅ 握手成功 ({results['timing']['hello_ms']}ms)")
+            logger.info(f"✅ Handshake succeeded ({results['timing']['hello_ms']}ms)")
 
-            # ── Step 3: PTT 开始 ──
+            # ── Step 3: PTT start ──
             ptt_start = json.dumps({
                 "type": "ptt_start",
                 "deviceId": "mock-client-001",
             })
             await ws.send(ptt_start)
-            logger.info("📨 发送 ptt_start")
+            logger.info("📨 Sent ptt_start")
 
-            # ── Step 4: 发送模拟音频 ──
+            # ── Step 4: Send simulated audio ──
             audio_data = generate_dummy_audio(SIMULATED_AUDIO_DURATION_MS)
-            chunk_size = 3200  # 与 llmserve CHUNK_SIZE 一致
+            chunk_size = 3200  # matches llmserve CHUNK_SIZE
             for i in range(0, len(audio_data), chunk_size):
                 chunk = audio_data[i:i + chunk_size]
                 await ws.send(chunk)
-                await asyncio.sleep(0.05)  # 模拟实时发送
-            logger.info(f"📨 发送音频: {len(audio_data)} bytes ({SIMULATED_AUDIO_DURATION_MS}ms)")
+                await asyncio.sleep(0.05)  # simulate real-time sending
+            logger.info(f"📨 Sent audio: {len(audio_data)} bytes ({SIMULATED_AUDIO_DURATION_MS}ms)")
 
-            # ── Step 5: PTT 停止 ──
+            # ── Step 5: PTT stop ──
             ptt_stop = json.dumps({
                 "type": "ptt_stop",
                 "duration_ms": SIMULATED_AUDIO_DURATION_MS,
             })
             await ws.send(ptt_stop)
-            logger.info("📨 发送 ptt_stop")
+            logger.info("📨 Sent ptt_stop")
 
             results["timing"]["ptt_cycle_start"] = int((time.time() - t0) * 1000)
 
-            # ── Step 6: 接收响应 ──
+            # ── Step 6: Receive responses ──
             llm_done_received = False
-            max_wait = 60  # 最多等 60 秒
+            max_wait = 60  # wait at most 60 seconds
             response_timeout = time.time() + max_wait
 
             while time.time() < response_timeout:
@@ -182,7 +182,7 @@ async def run_full_test(server_url: str):
                     break
 
                 if isinstance(msg, bytes):
-                    # TTS 音频帧: 2字节header + JSON头 + PCM数据
+                    # TTS audio frame: 2-byte header length + JSON header + PCM data
                     if len(msg) < 4:
                         continue
                     header_len = struct.unpack(">H", msg[:2])[0]
@@ -192,9 +192,9 @@ async def run_full_test(server_url: str):
                         if header.get("type") == "tts_audio":
                             pcm_len = len(msg) - 2 - header_len
                             results["tts_audio_received"] = True
-                            logger.info(f"🎵 TTS 音频: {pcm_len} bytes PCM ({pcm_len // 2} samples)")
+                            logger.info(f"🎵 TTS audio: {pcm_len} bytes PCM ({pcm_len // 2} samples)")
 
-                            # 保存 TTS 音频到 WAV 文件
+                            # Save the TTS audio to a WAV file
                             save_tts_wav(msg, header_len)
                     except json.JSONDecodeError:
                         pass
@@ -209,20 +209,20 @@ async def run_full_test(server_url: str):
                     if msg_type == "status":
                         status = data.get("status", "")
                         if status == "recording":
-                            logger.info("🎤 服务器确认: 录音中")
+                            logger.info("🎤 Server confirms: recording")
                         elif status == "processing":
-                            logger.info("⚙️ 服务器确认: 处理中")
+                            logger.info("⚙️ Server confirms: processing")
 
                     elif msg_type == "asr_interim":
-                        logger.info(f"🗣️  ASR 中间结果: {data.get('text', '')}")
+                        logger.info(f"🗣️  ASR interim result: {data.get('text', '')}")
 
                     elif msg_type == "transcript_final":
                         results["asrresult"] = data.get("text", "")
-                        logger.info(f"✅ ASR 最终结果: {results['asrresult']}")
+                        logger.info(f"✅ ASR final result: {results['asrresult']}")
 
                     elif msg_type == "asr_final":
                         results["asrresult"] = data.get("text", "")
-                        logger.info(f"✅ ASR 最终结果: {results['asrresult']}")
+                        logger.info(f"✅ ASR final result: {results['asrresult']}")
 
                     elif msg_type == "cli_summary":
                         results["llm_chunks"] += 1
@@ -231,19 +231,19 @@ async def run_full_test(server_url: str):
                         results["llm_full_text"] = assistant_text
                         if data.get("done"):
                             llm_done_received = True
-                            logger.info(f"✅ LLM 完成: {len(assistant_text)} 字符")
+                            logger.info(f"✅ LLM done: {len(assistant_text)} characters")
 
                     elif msg_type == "llm_done":
                         results["llm_full_text"] = data.get("full_text", "")
                         llm_done_received = True
-                        logger.info(f"✅ LLM done: {len(results['llm_full_text'])} 字符")
+                        logger.info(f"✅ LLM done: {len(results['llm_full_text'])} characters")
 
                     elif msg_type == "error":
                         results["errors"].append(data.get("message", "unknown error"))
-                        logger.error(f"❌ 服务器错误: {data.get('message')}")
+                        logger.error(f"❌ Server error: {data.get('message')}")
 
                     elif msg_type == "pong":
-                        pass  # 忽略 pong
+                        pass  # ignore pong
 
                     elif msg_type == "intent_response":
                         results["intent_response"] = True
@@ -254,20 +254,20 @@ async def run_full_test(server_url: str):
                         logger.info(f"🎯 Intent: displayText='{display_text}', {len(actions)} actions")
                         for action in actions:
                             logger.info(f"   → {action.get('action', 'unknown')}")
-                        llm_done_received = True  # intent_response 意味着完成
+                        llm_done_received = True  # intent_response means completion
 
             results["timing"]["total_ms"] = int((time.time() - t0) * 1000)
 
     except websockets.exceptions.ConnectionClosed as e:
-        results["errors"].append(f"连接断开: {e}")
+        results["errors"].append(f"Connection closed: {e}")
     except Exception as e:
-        results["errors"].append(f"异常: {e}")
+        results["errors"].append(f"Exception: {e}")
 
     return results
 
 
 def save_tts_wav(frame: bytes, header_len: int):
-    """将 TTS PCM 帧保存为 WAV 文件"""
+    """Save a TTS PCM frame as a WAV file"""
     pcm_data = frame[2 + header_len:]
     if len(pcm_data) < 2:
         return
@@ -279,24 +279,24 @@ def save_tts_wav(frame: bytes, header_len: int):
             wf.setsampwidth(2)  # 16-bit
             wf.setframerate(16000)
             wf.writeframes(pcm_data)
-        logger.info(f"🎵 TTS WAV 已保存: {filename}")
+        logger.info(f"🎵 TTS WAV saved: {filename}")
     except Exception as e:
-        logger.warning(f"保存 TTS WAV 失败: {e}")
+        logger.warning(f"Failed to save TTS WAV: {e}")
 
 
 def print_test_report(results: dict):
-    """打印测试报告"""
+    """Print the test report"""
     print("\n" + "=" * 60)
-    print("  端到端测试报告")
+    print("  End-to-end test report")
     print("=" * 60)
 
     checks = [
-        ("Hello 握手", results["hello_ack"]),
+        ("Hello handshake", results["hello_ack"]),
         ("Server Ready", results["server_ready"]),
-        ("ASR 识别", results["asrresult"] is not None and len(results["asrresult"]) > 0),
-        ("LLM 回复", results["llm_chunks"] > 0 or len(results["llm_full_text"]) > 0),
+        ("ASR recognition", results["asrresult"] is not None and len(results["asrresult"]) > 0),
+        ("LLM response", results["llm_chunks"] > 0 or len(results["llm_full_text"]) > 0),
         ("CLI Summary / Intent", results["cli_summary"] or results["intent_response"]),
-        ("TTS 音频", results["tts_audio_received"]),
+        ("TTS audio", results["tts_audio_received"]),
     ]
 
     all_pass = True
@@ -307,23 +307,23 @@ def print_test_report(results: dict):
         print(f"  {status}  {name}")
 
     if results["errors"]:
-        print(f"\n  ⚠️  错误 ({len(results['errors'])}):")
+        print(f"\n  ⚠️  Errors ({len(results['errors'])}):")
         for err in results["errors"]:
             print(f"    - {err}")
 
-    print(f"\n  ⏱️  延迟:")
+    print(f"\n  ⏱️  Timing:")
     if "hello_ms" in results["timing"]:
-        print(f"    握手: {results['timing']['hello_ms']}ms")
+        print(f"    Handshake: {results['timing']['hello_ms']}ms")
     if "ptt_cycle_start" in results["timing"]:
-        print(f"    PTT 循环开始: {results['timing']['ptt_cycle_start']}ms")
+        print(f"    PTT cycle start: {results['timing']['ptt_cycle_start']}ms")
     if "total_ms" in results["timing"]:
-        print(f"    总耗时: {results['timing']['total_ms']}ms")
+        print(f"    Total time: {results['timing']['total_ms']}ms")
 
     print("=" * 60)
     if all_pass:
-        print("  🎉 全部通过！")
+        print("  🎉 All checks passed!")
     else:
-        print("  ❌ 部分失败，请检查上方错误信息")
+        print("  ❌ Some checks failed, see error info above")
     print("=" * 60 + "\n")
 
 
@@ -334,30 +334,30 @@ def main():
         if idx + 1 < len(sys.argv):
             server_url = sys.argv[idx + 1]
 
-    print(f"Mock Client — 目标服务器: {server_url}")
-    print(f"模拟音频: {SIMULATED_AUDIO_DURATION_MS}ms PCM16 16kHz")
+    print(f"Mock Client — target server: {server_url}")
+    print(f"Simulated audio: {SIMULATED_AUDIO_DURATION_MS}ms PCM16 16kHz")
     print()
 
-    # 尝试 UDP discovery
+    # Attempt UDP discovery
     try:
         import socket as _socket  # noqa: F811
         discovered_url = asyncio.run(run_discovery())
         if discovered_url:
             server_url = discovered_url
-            print(f"使用发现地址: {server_url}")
+            print(f"Using discovered address: {server_url}")
         else:
-            print(f"使用默认地址: {server_url}")
+            print(f"Using default address: {server_url}")
     except Exception as e:
-        logger.warning(f"Discovery 失败: {e}，使用默认地址")
-        print(f"使用默认地址: {server_url}")
+        logger.warning(f"Discovery failed: {e}, using default address")
+        print(f"Using default address: {server_url}")
 
     print()
 
-    # 运行完整测试
+    # Run the full test
     results = asyncio.run(run_full_test(server_url))
     print_test_report(results)
 
-    # 退出码
+    # Exit code
     has_errors = bool(results["errors"])
     missing_core = not results["hello_ack"] or not results["server_ready"]
     sys.exit(1 if has_errors or missing_core else 0)

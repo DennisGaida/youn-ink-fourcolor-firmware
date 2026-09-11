@@ -9,7 +9,7 @@
 #include "log_renderer.h"
 #include "rawdraw/rawdraw.h"
 #include "rawdraw/style.h"
-#include "rawdraw/layout_utils.h"  // FIX: 使用 InkCenteredTextTopYInBox 替代 line_height 居中
+#include "rawdraw/layout_utils.h"  // FIX: use InkCenteredTextTopYInBox instead of line_height centering
 #include "rawdraw/theme.h"
 #include "i18n.h"
 #include <cstring>
@@ -199,8 +199,9 @@ void LogRenderer::DrawTitleBar(uint8_t* fb, int width) {
     DrawHLine(fb, width, line_y, 0, width, border);
     DrawHLine(fb, width, line_y + 1, 0, width, border);
 
-    // FIX: 改用 InkCenteredTextTopYInBox，避免 line_height 居中导致中文偏上
-    // 参见 wiki/projects/notellm-baseline-alignment.md
+    // FIX: switched to InkCenteredTextTopYInBox to avoid line_height centering
+    // pushing Chinese text too high
+    // See wiki/projects/notellm-baseline-alignment.md
     const char* title_str = i18n::Tr("日志", "Log");
     int title_text_y = InkCenteredTextTopYInBox(font_, title_str, title_y_start, title_bar_h, 1);
     DrawText(fb, width, Style::kSpacingLG, title_text_y, title_str, font_, text);
