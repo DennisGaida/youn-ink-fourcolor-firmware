@@ -16,6 +16,7 @@
 #include <cstdio>
 #include <ctime>
 #include <algorithm>
+#include <mutex>
 
 // External font references
 extern const lv_font_t SourceHanSansSC_Regular_slim;
@@ -28,7 +29,14 @@ namespace rawdraw {
 static time_t s_boot_time = 0;
 static bool s_boot_time_set = false;
 
-// Static event log entries (circular buffer)
+// Static event log entries (circular buffer).
+// CollectLogEntries() (writer, via Init()/BOOT-long-press) can run on a
+// different FreeRTOS task than Render() (reader, via the app loop's periodic
+// refresh) — button callbacks dispatch on the esp_timer task while page
+// refreshes run on the app_main task. Without this lock, a refresh landing
+// mid-rewrite reads a partially-updated array, producing garbled/inconsistent
+// output across successive e-paper refresh passes.
+static std::mutex s_log_mutex;
 static constexpr int kMaxLogEntries = 32;
 static LogEntry s_log_entries[kMaxLogEntries];
 static int s_log_count = 0;
@@ -57,6 +65,9 @@ void LogRenderer::Init(int width, int height) {
 }
 
 void LogRenderer::CollectLogEntries() {
+    // Locks for the whole rebuild (including the AddLogEntry() calls below,
+    // which assume the lock is already held — see s_log_mutex declaration).
+    std::lock_guard<std::mutex> lock(s_log_mutex);
     s_log_count = 0;
     s_log_head = 0;
 
@@ -92,14 +103,18 @@ void LogRenderer::CollectLogEntries() {
 }
 
 void LogRenderer::AddLogEntry(const char* tag, const char* message) {
+    int write_index;
     if (s_log_count >= kMaxLogEntries) {
-        // Overwrite oldest entry
+        // Buffer full: overwrite oldest entry
         s_log_head = (s_log_head + 1) % kMaxLogEntries;
+        write_index = s_log_head;
     } else {
+        // Still filling: append after the last written entry
+        write_index = s_log_count;
         s_log_count++;
     }
 
-    LogEntry& entry = s_log_entries[s_log_head];
+    LogEntry& entry = s_log_entries[write_index];
     entry.time = time(nullptr);
     strncpy(entry.tag, tag, sizeof(entry.tag) - 1);
     entry.tag[sizeof(entry.tag) - 1] = '\0';
@@ -109,6 +124,11 @@ void LogRenderer::AddLogEntry(const char* tag, const char* message) {
 
 void LogRenderer::Render(uint8_t* fb, int width, int height) {
     if (!fb) return;
+
+    // Held for the whole render pass so a concurrent CollectLogEntries()
+    // (e.g. from a BOOT-long-press refresh on another task) can't be read
+    // mid-rewrite — see s_log_mutex declaration.
+    std::lock_guard<std::mutex> lock(s_log_mutex);
 
     // === Title bar ===
     DrawTitleBar(fb, width);
@@ -120,9 +140,11 @@ void LogRenderer::Render(uint8_t* fb, int width, int height) {
     const int content_left = Style::kSpacingMD;
     const int content_right = width - Style::kSpacingMD;
 
-    // Collect fresh log entries
-    CollectLogEntries();
-
+    // Entries are collected once in Init() (re-run whenever this page is
+    // switched into). Re-collecting here on every Render() call re-samples
+    // live heap/PSRAM stats each frame; on e-paper's partial refresh, digits
+    // that change by a few KB between redraws don't get cleanly erased and
+    // visibly ghost/stack on top of each other.
     if (s_log_count == 0) {
         const char* empty_text = i18n::Tr("暂无日志", "No log entries");
         int text_w = MeasureTextWidth(empty_text, font_);
@@ -216,7 +238,15 @@ void LogRenderer::DrawTitleBar(uint8_t* fb, int width) {
 }
 
 bool LogRenderer::HandleInput(const ButtonEvent& event) {
-    if (s_log_count == 0) return false;
+    // Short-lived lock scopes only (not the whole function) — the
+    // kBootLongPress branch below calls CollectLogEntries(), which takes
+    // this same non-recursive mutex itself.
+    int log_count;
+    {
+        std::lock_guard<std::mutex> lock(s_log_mutex);
+        log_count = s_log_count;
+    }
+    if (log_count == 0) return false;
 
     switch (event.type) {
         case ButtonEvent::kUpClick:
@@ -231,13 +261,13 @@ bool LogRenderer::HandleInput(const ButtonEvent& event) {
             break;
 
         case ButtonEvent::kDownClick: {
-            if (selected_index_ < s_log_count - 1) {
+            if (selected_index_ < log_count - 1) {
                 selected_index_++;
                 const int content_h = height_ - Style::kStatusBarHeight - Style::kSpacingXXS;
                 const int line_h = font_->line_height + Style::kSpacingXS;
                 int visible = content_h / line_h;
                 if (visible < 1) visible = 1;
-                int max_offset = s_log_count - visible;
+                int max_offset = log_count - visible;
                 if (max_offset < 0) max_offset = 0;
                 if (selected_index_ >= scroll_offset_ + visible) {
                     scroll_offset_ = selected_index_ - visible + 1;
@@ -264,14 +294,19 @@ bool LogRenderer::HandleInput(const ButtonEvent& event) {
 }
 
 void LogRenderer::ClampScrollOffset() {
-    if (s_log_count == 0) {
+    int log_count;
+    {
+        std::lock_guard<std::mutex> lock(s_log_mutex);
+        log_count = s_log_count;
+    }
+    if (log_count == 0) {
         scroll_offset_ = 0;
         return;
     }
     const int content_h = height_ - Style::kStatusBarHeight - Style::kSpacingXXS;
     const int line_h = font_->line_height + Style::kSpacingXS;
     const int visible = content_h / line_h;
-    int max_offset = s_log_count - visible;
+    int max_offset = log_count - visible;
     if (max_offset < 0) max_offset = 0;
     scroll_offset_ = std::max(0, std::min(scroll_offset_, max_offset));
 }
