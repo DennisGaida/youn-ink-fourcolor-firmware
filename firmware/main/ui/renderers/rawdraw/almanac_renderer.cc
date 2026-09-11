@@ -195,8 +195,11 @@ void AlmanacRenderer::Render(uint8_t* fb, int width, int height) {
     const auto& theme = ThemeManager::Get();
     const Color text = theme.ColorFor(ThemeToken::TextPrimary);
     const Color secondary = theme.ColorFor(ThemeToken::TextSecondary);
-    const Color accent = theme.ColorFor(ThemeToken::Accent);
-    const Color danger = theme.ColorFor(ThemeToken::Danger);
+    // ColorFor(Accent/Danger) returns badge-text white (meant for ink drawn
+    // on top of a colored badge bg), which is invisible when used directly
+    // on the plain page background — use the badge's colored side instead.
+    const Color accent = theme.Style(ThemeToken::Accent).bg;
+    const Color danger = theme.Style(ThemeToken::Danger).bg;
     const Color border = theme.ColorFor(ThemeToken::Border);
 
     // === Title bar ===
@@ -243,28 +246,53 @@ void AlmanacRenderer::Render(uint8_t* fb, int width, int height) {
     y += Style::kSpacingSM;
 
     // === 宜 (auspicious) section ===
+    // Entries are drawn with a running x-cursor (measured per-entry) instead
+    // of a fixed column pitch, wrapping to a new row when an entry would run
+    // past the right margin — the English translations can be far wider than
+    // any fixed pitch would allow.
+    const int right_limit = width - Style::kSpacingLG;
     const char* yi_label = i18n::Tr("宜", "Do");
     DrawText(fb, width, Style::kSpacingLG, y, yi_label, title_font_, accent);
     int yi_label_w = MeasureTextWidth(yi_label, title_font_);
     int yi_start = Style::kSpacingLG + yi_label_w + Style::kSpacingSM;
-    int yi_y = y;
-    for (int i = 0; i < 4; i++) {
-        char buf[24];
-        snprintf(buf, sizeof(buf), "%s", GetYiEntry(yi_idx_, i));
-        DrawText(fb, width, yi_start + i * 60, yi_y, buf, font_, text);
+    int yi_rows = 1;
+    {
+        int x = yi_start;
+        int cur_y = y;
+        for (int i = 0; i < 4; i++) {
+            char buf[24];
+            snprintf(buf, sizeof(buf), "%s", GetYiEntry(yi_idx_, i));
+            int w = MeasureTextWidth(buf, font_);
+            if (x > yi_start && x + w > right_limit) {
+                x = yi_start;
+                cur_y += font_->line_height + Style::kSpacingXS;
+                yi_rows++;
+            }
+            DrawText(fb, width, x, cur_y, buf, font_, text);
+            x += w + Style::kSpacingSM;
+        }
     }
-    y += font_->line_height + Style::kSpacingMD;
+    y += yi_rows * font_->line_height + (yi_rows - 1) * Style::kSpacingXS + Style::kSpacingMD;
 
     // === 忌 (inauspicious) section ===
     const char* ji_label = i18n::Tr("忌", "Avoid");
     DrawText(fb, width, Style::kSpacingLG, y, ji_label, title_font_, danger);
     int ji_label_w = MeasureTextWidth(ji_label, title_font_);
     int ji_start = Style::kSpacingLG + ji_label_w + Style::kSpacingSM;
-    int ji_y = y;
-    for (int i = 0; i < 3; i++) {
-        char buf[24];
-        snprintf(buf, sizeof(buf), "%s", GetJiEntry(ji_idx_, i));
-        DrawText(fb, width, ji_start + i * 60, ji_y, buf, font_, text);
+    {
+        int x = ji_start;
+        int cur_y = y;
+        for (int i = 0; i < 3; i++) {
+            char buf[24];
+            snprintf(buf, sizeof(buf), "%s", GetJiEntry(ji_idx_, i));
+            int w = MeasureTextWidth(buf, font_);
+            if (x > ji_start && x + w > right_limit) {
+                x = ji_start;
+                cur_y += font_->line_height + Style::kSpacingXS;
+            }
+            DrawText(fb, width, x, cur_y, buf, font_, text);
+            x += w + Style::kSpacingSM;
+        }
     }
 
     needs_full_refresh_ = false;

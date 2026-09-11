@@ -196,7 +196,8 @@ void LifeBarRenderer::Render(uint8_t* fb, int width, int height) {
 
     // === Header ===
     RenderHeader(fb, width, y);
-    y += title_font_->line_height + Style::kSpacingXXS;
+    y += title_font_->line_height + Style::kSpacingXXS +
+         small_font_->line_height + Style::kSpacingSM;
 
     // === Circular gauge ===
     RenderGauge(fb, width, y, height - y - Style::kSpacingMD);
@@ -230,12 +231,26 @@ void LifeBarRenderer::RenderGauge(uint8_t* fb, int width, int y_start, int avail
     const PaintStyle progress_style = theme.Component(ComponentRole::Progress);
     const Color text = theme.ColorFor(ThemeToken::TextPrimary);
     const Color secondary = theme.ColorFor(ThemeToken::TextSecondary);
-    const Color accent = theme.ColorFor(ThemeToken::Accent);
+    // ColorFor(Accent) returns badge-text white (meant for text on a colored
+    // badge bg), which is invisible on the plain page background at the
+    // gauge center — use the badge's colored side instead.
+    const Color accent = theme.Style(ThemeToken::Accent).bg;
     // Gauge geometry
-    const int gauge_r = 70;
     const int gauge_thickness = 8;
     const int cx = width / 2;
-    int cy = y_start + gauge_r + 5;
+    const int top_gap = 5;
+
+    // A hardcoded radius left no room below the gauge for the 3rd stat line
+    // (weekends remaining) or the quote — they were silently skipped every
+    // time on this screen size. Reserve their vertical budget first and size
+    // the gauge with whatever's left, so all content actually gets drawn.
+    const int stats_reserved_h = 3 * (small_font_->line_height + Style::kSpacingXS) +
+                                  Style::kSpacingXS +
+                                  (small_font_->line_height * 2 + Style::kSpacingXS);
+    int gauge_r = (available_h - top_gap - gauge_thickness - Style::kSpacingMD - stats_reserved_h) / 2;
+    gauge_r = std::max(40, std::min(70, gauge_r));
+
+    int cy = y_start + gauge_r + top_gap;
 
     // Check if gauge fits within available space
     const int gauge_bottom = cy + gauge_r;
@@ -248,8 +263,14 @@ void LifeBarRenderer::RenderGauge(uint8_t* fb, int width, int y_start, int avail
 
     // === Draw circular progress ===
     Point center = {cx, cy};
+    // progress_style.fg is badge-text white (meant for ink on a colored
+    // badge bg) — passed straight through as the elapsed-arc color it is
+    // invisible against the page background. Draw a plain track and fill
+    // the elapsed arc with the token's colored side instead.
+    const Color track_color = WHITE;
+    const Color fill_color = progress_style.bg;
     DrawCircularProgress(fb, width, center, gauge_r, gauge_thickness,
-                         life_pct_, progress_style.bg, progress_style.fg);
+                         life_pct_, track_color, fill_color);
 
     // === Center text: percentage number only (no overlapping text) ===
     char pct_buf[16];

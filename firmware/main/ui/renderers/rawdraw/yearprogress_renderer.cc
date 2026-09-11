@@ -131,7 +131,10 @@ void YearProgressRenderer::Render(uint8_t* fb, int width, int height) {
     const PaintStyle progress_style = theme.Component(ComponentRole::Progress);
     const Color text = theme.ColorFor(ThemeToken::TextPrimary);
     const Color secondary = theme.ColorFor(ThemeToken::TextSecondary);
-    const Color accent = theme.ColorFor(ThemeToken::Accent);
+    // ColorFor(Accent) returns badge-text white (meant for text drawn on a
+    // colored badge bg) — invisible on the plain page background here, so use
+    // the badge's colored side instead.
+    const Color accent = theme.Style(ThemeToken::Accent).bg;
 
     // Refresh time periodically
     UpdateTime();
@@ -173,8 +176,15 @@ void YearProgressRenderer::Render(uint8_t* fb, int width, int height) {
     int bar_x = (width - bar_w) / 2;
     bar_x = (bar_x + 7) & ~7;
 
+    // progress_style.fg is badge-text white (ink-on-colored-bg semantics) —
+    // passed straight through it makes the elapsed fill invisible against the
+    // page background. Draw a plain track and fill the elapsed portion with
+    // the token's colored side instead.
+    PaintStyle bar_style = progress_style;
+    bar_style.bg = WHITE;
+    bar_style.fg = progress_style.bg;
     DrawStyledProgress(fb, width, {bar_x, y, bar_w, bar_h}, progress_pct_,
-                       progress_style, Style::kBorderRadiusPill);
+                       bar_style, Style::kBorderRadiusPill);
     y += bar_h + 20;  // 20px gap after progress bar
 
     // === Section 5: "第X天/共Y天" — independent Y, >=20px gap below ===
@@ -265,7 +275,9 @@ void YearProgressRenderer::RenderMonthRow(uint8_t* fb, int width, int y, int mon
     const Color text = theme.ColorFor(ThemeToken::TextPrimary);
     const Color secondary = theme.ColorFor(ThemeToken::TextSecondary);
     const Color success = theme.ColorFor(ThemeToken::SuccessLike);
-    const Color accent = theme.ColorFor(ThemeToken::Accent);
+    // ColorFor(Accent) returns badge-text white, invisible on the plain page
+    // background used here (see Render() for the same fix).
+    const Color accent = theme.Style(ThemeToken::Accent).bg;
     const int row_h = 22;
     // FIX: 改用 InkCenteredTextTopYInBox，避免 line_height 居中导致中文偏上
     // 参见 wiki/projects/notellm-baseline-alignment.md
