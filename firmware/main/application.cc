@@ -394,6 +394,14 @@ void Application::OnDownClick() {
     }
 }
 
+void Application::OnUpDoubleClick() {
+    ESP_LOGI(kTag, "UP double click");
+    Board::GetInstance().FlashActivityLed();
+    if (rawdraw_ui_manager_) {
+        rawdraw_ui_manager_->HandleInput(rawdraw::ButtonEvent{rawdraw::ButtonEvent::kUpDoubleClick});
+    }
+}
+
 void Application::OnUpLongPress() {
     ESP_LOGI(kTag, "UP long press");
     NoteButtonActivity();
