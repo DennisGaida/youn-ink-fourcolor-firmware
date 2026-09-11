@@ -646,17 +646,22 @@ bool RawDrawUiManager::TryDisplayCurrentPhotoRaw4Color() {
     return shown;
 }
 
-const std::array<RawDrawUiManager::QuickSwitchItem, 2>& RawDrawUiManager::GetQuickSwitchItems() {
-    static const std::array<QuickSwitchItem, 2> kItems = {{
+const std::array<RawDrawUiManager::QuickSwitchItem, 9>& RawDrawUiManager::GetQuickSwitchItems() {
+    static const std::array<QuickSwitchItem, 9> kItems = {{
         {RawDrawPageId::Gallery, FA_SETTINGS_IMAGE},
+        // Weather uses a separate icon font (weather_icons.h) not loaded by
+        // this menu's icon_font (fa_settings_16), so no icon glyph here.
+        {RawDrawPageId::Weather, nullptr},
+        {RawDrawPageId::News, FA_SETTINGS_NEWSPAPER},
+        {RawDrawPageId::Calendar, FA_SETTINGS_CALENDAR},
+        {RawDrawPageId::LifeBar, nullptr},
+        {RawDrawPageId::Almanac, nullptr},
+        {RawDrawPageId::Log, nullptr},
+        {RawDrawPageId::YearProgress, nullptr},
         {RawDrawPageId::Settings, FA_SETTINGS_GEAR},
-#if 0
-        // Hardware-only alignment pages are intentionally hidden from the
-        // user-facing quick switch. Keep the renderer code for calibration,
-        // but do not expose them in normal navigation.
-        {RawDrawPageId::FontDebug, nullptr},
-        {RawDrawPageId::FontMetrics, nullptr},
-#endif
+        // Hardware-only alignment pages (FontDebug/FontMetrics) remain
+        // intentionally excluded from the user-facing quick switch; they
+        // are calibration tools, not user features.
     }};
     return kItems;
 }

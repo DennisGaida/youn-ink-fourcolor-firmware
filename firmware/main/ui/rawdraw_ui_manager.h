@@ -505,7 +505,7 @@ private:
     void RestoreQuickSwitchBacking(uint8_t* fb);
     void RedrawQuickSwitchOnly(uint8_t* fb);
     void RefreshRect(const rawdraw::Rect& rect, bool urgent = false);
-    static const std::array<QuickSwitchItem, 2>& GetQuickSwitchItems();
+    static const std::array<QuickSwitchItem, 9>& GetQuickSwitchItems();
     void MarkAllRenderersFullRefresh();
 };
 
