@@ -159,6 +159,20 @@ The firmware UI currently runs on the RawDraw component system. Key pages includ
 
 The four-color screen theme layer draws components via semantic styles; adding bare `RED/YELLOW/BLACK/WHITE` directly in business pages is discouraged. Prefer RawDraw components and theme tokens when adding new UI.
 
+### Button Controls
+
+The device has three physical buttons: UP, DOWN, and BOOT/CONFIRM.
+
+| Button | Click | Long press | Double-click |
+| --- | --- | --- | --- |
+| UP | Context-sensitive (menu-up / previous item) | Only acts if already on Settings: exits back to Gallery | Opens/closes the quick-switch menu |
+| DOWN | Context-sensitive (menu-down / next item) | Opens Settings (from any page) | Not wired to anything |
+| BOOT/CONFIRM | Confirm/select (e.g. picks the highlighted quick-switch item) | Context-sensitive: exits WiFi-config-AP mode if active, else exits AP photo-transfer mode if running, else starts AP photo-transfer mode from Gallery, else voice push-to-talk | Not wired to anything (reserved for debug screenshot capture, but no hardware handler currently triggers it) |
+
+UP + DOWN held together (long press) enters WiFi config mode (starts the device's config AP).
+
+Note UP long-press does **not** open Settings — only DOWN long-press does. UP long-press only ever *exits* Settings back to Gallery, and is a no-op on every other page.
+
 ## Environment Variables
 
 Common backend environment variables:
