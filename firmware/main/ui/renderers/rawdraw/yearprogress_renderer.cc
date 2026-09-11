@@ -11,6 +11,7 @@
 #include "rawdraw/style.h"
 #include "rawdraw/layout_utils.h"  // FIX: 使用 InkCenteredTextTopYInBox 替代 line_height 居中
 #include "rawdraw/theme.h"
+#include "i18n.h"
 #include <algorithm>
 #include <cstdio>
 #include <ctime>
@@ -22,13 +23,20 @@ extern const lv_font_t font_zectrix_16_1;
 
 namespace rawdraw {
 
-static const char* kMonthNames[] = {
+static const char* kMonthNamesZh[] = {
     "1月", "2月", "3月", "4月", "5月", "6月",
     "7月", "8月", "9月", "10月", "11月", "12月"
 };
+static const char* kMonthNamesEn[] = {
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
 
-static const char* kWeekdayNames[] = {
+static const char* kWeekdayNamesZh[] = {
     "周日", "周一", "周二", "周三", "周四", "周五", "周六"
+};
+static const char* kWeekdayNamesEn[] = {
+    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
 };
 
 // ============================================================
@@ -70,16 +78,16 @@ int YearProgressRenderer::GetDaysInMonth(int year, int month) const {
 }
 
 void YearProgressRenderer::FormatDate(char* buf, int len) const {
-    snprintf(buf, len, "%04d年%02d月%02d日 %s",
-             year_, month_ + 1, day_, kWeekdayNames[wday_]);
+    snprintf(buf, len, i18n::Tr("%04d年%02d月%02d日 %s", "%04d-%02d-%02d %s"),
+             year_, month_ + 1, day_, GetWeekdayName(wday_));
 }
 
 const char* YearProgressRenderer::GetMonthName(int month) const {
-    return kMonthNames[month];
+    return i18n::GetLanguage() == i18n::Language::kEnUS ? kMonthNamesEn[month] : kMonthNamesZh[month];
 }
 
 const char* YearProgressRenderer::GetWeekdayName(int wday) const {
-    return kWeekdayNames[wday];
+    return i18n::GetLanguage() == i18n::Language::kEnUS ? kWeekdayNamesEn[wday] : kWeekdayNamesZh[wday];
 }
 
 // ============================================================
@@ -133,7 +141,7 @@ void YearProgressRenderer::Render(uint8_t* fb, int width, int height) {
     int y = content_top;
 
     // === Section 1: Title "年度进度" — independent Y, >=20px gap below ===
-    const char* title = "年度进度";
+    const char* title = i18n::Tr("年度进度", "Year Progress");
     int title_w = MeasureTextWidth(title, title_font_);
     int title_x = (width - title_w) / 2;
     title_x = (title_x + 7) & ~7;
@@ -171,7 +179,7 @@ void YearProgressRenderer::Render(uint8_t* fb, int width, int height) {
 
     // === Section 5: "第X天/共Y天" — independent Y, >=20px gap below ===
     char day_str[64];
-    snprintf(day_str, sizeof(day_str), "第%d天 / 共%d天", day_of_year_, total_days_);
+    snprintf(day_str, sizeof(day_str), i18n::Tr("第%d天 / 共%d天", "Day %d / %d"), day_of_year_, total_days_);
     int day_str_w = MeasureTextWidth(day_str, small_font_);
     int day_str_x = (width - day_str_w) / 2;
     day_str_x = (day_str_x + 7) & ~7;
@@ -191,7 +199,7 @@ void YearProgressRenderer::RenderHeader(uint8_t* fb, int width, int y_start) con
     const Color text = theme.ColorFor(ThemeToken::TextPrimary);
     const Color secondary = theme.ColorFor(ThemeToken::TextSecondary);
     // Title
-    const char* title = "年度进度";
+    const char* title = i18n::Tr("年度进度", "Year Progress");
     int title_w = MeasureTextWidth(title, title_font_);
     int title_x = (width - title_w) / 2;
     title_x = (title_x + 7) & ~7;  // 8-byte align
@@ -216,7 +224,7 @@ void YearProgressRenderer::RenderMonthGrid(uint8_t* fb, int width, int height, i
     const int rows_visible = (content_bottom - y_start - small_font_->line_height - Style::kSpacingXS) / row_h;
 
     // Section title
-    const char* section = "月份概览";
+    const char* section = i18n::Tr("月份概览", "Month Overview");
     int sec_x = Style::kSpacingMD;
     sec_x = (sec_x + 7) & ~7;
     DrawText(fb, width, sec_x, y_start, section, small_font_, text);
